@@ -1,4 +1,6 @@
 .vs
 
+bin
+obj
 Gury3d\Release
 Release
