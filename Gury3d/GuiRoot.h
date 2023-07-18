@@ -43,7 +43,11 @@ namespace RBX
 			Color4 background;
 			Color4 outline;
 			virtual void render(RenderDevice* d);
-			GuiBox() {background = Color4(0.5, 0.5, 0.5, 0.3); outline = Color4::CLEAR;}
+			GuiBox() : background(0.5f, 0.5f, 0.5f, 0.5f), outline(Color4::CLEAR) {}
+				/*
+				 * this is a proper way to initialize struct/class members
+				 * if you initialize them in the function body it will call the constructor twice which is not good
+				 */
 		};
 
 		class GuiList : public GuiObject
@@ -84,12 +88,14 @@ namespace RBX
 
 			virtual void handleMouse(UserInput* ui);
 
-			GuiButton() {
-				isButton = true; sz = 12; 
-				titleColor = Color4(0.25, 0.25, 0.25, 0.95);
-				hoverColor = Color4(0.7, 0.7, 0.7, 0.3);
-				disabledColor = Color4(0.6, 0.6, 0.6, 0.6);
-				clickedColor = hoverColor;
+			GuiButton() :
+				titleColor(0.25f, 0.25f, 0.25f, 0.95f),
+				hoverColor(0.7f, 0.7f, 0.7f, 0.3f),
+				disabledColor(0.6f, 0.6f, 0.6f, 0.6f),
+				clickedColor(hoverColor)
+			{
+				isButton = true;
+				sz = 12;
 			}
 		};
 

@@ -6,7 +6,7 @@
 
 #include <map>
 
-#define BACKPACK_ITEM_HOVER_COLOR  Color4(0.7, 0.7, 0.7, 1);
+#define BACKPACK_ITEM_HOVER_COLOR  Color4(0.7f, 0.7f, 0.7f, 1.0f);
 #define BACKPACK_ITEM_CLICKED_COLOR Color3::yellow();
 
 namespace RBX

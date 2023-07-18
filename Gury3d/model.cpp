@@ -6,7 +6,7 @@
 void RBX::ModelInstance::move(Vector3 vect)
 {
 	RBX::Instance* child;
-	for (int i = 0; i < getChildren()->size(); i++)
+	for (size_t i = 0; i < getChildren()->size(); i++)
 	{
 		child = getChildren()->at(i);
 		if (child && child->getClassName() == "PVInstance")
@@ -20,7 +20,7 @@ void RBX::ModelInstance::move(Vector3 vect)
 void RBX::ModelInstance::rotate(Vector3 rot)
 {
 	RBX::Instance* child;
-	for (int i = 0; i < getChildren()->size(); i++)
+	for (size_t i = 0; i < getChildren()->size(); i++)
 	{
 		child = getChildren()->at(i);
 		if (child && child->getClassName() == "PVInstance")
@@ -34,7 +34,7 @@ void RBX::ModelInstance::rotate(Vector3 rot)
 void RBX::ModelInstance::lookAt(Vector3 vect)
 {
 	RBX::Instance* child;
-	for (int i = 0; i < getChildren()->size(); i++)
+	for (size_t i = 0; i < getChildren()->size(); i++)
 	{
 		child = getChildren()->at(i);
 		if (child && child->getClassName() == "PVInstance")
@@ -49,9 +49,9 @@ void RBX::ModelInstance::breakJoints()
 {
 	RBX::Instances* pvs = new RBX::Instances();
 	RBX::Workspace::singleton()->getPVInstances(getChildren(), pvs);
-	for (int i = 0; i < pvs->size(); i++)
+	for (size_t i = 0; i < pvs->size(); i++)
 	{
-		for (int o = 0; o < pvs->at(i)->getChildren()->size(); o++)
+		for (size_t o = 0; o < pvs->at(i)->getChildren()->size(); o++)
 		{
 			RBX::Physics::Weld* w = static_cast<RBX::Physics::Weld*>(pvs->at(i)->getChildren()->at(o));
 			if (w && w->getClassName() == "Weld")

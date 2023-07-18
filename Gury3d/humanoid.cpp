@@ -198,7 +198,7 @@ void RBX::Humanoid::step()
 
             if (walkDirection != Vector3::zero())
             {
-                wlk = lerp(_old.translation, pos, 0.65);
+                wlk = lerp(_old.translation, pos, 0.65f);
 
                 if (!bsls_steps->isPlaying())
                     bsls_steps->play();

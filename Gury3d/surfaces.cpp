@@ -1,6 +1,6 @@
 #include "render_shapes.h"
 
-TextureRef getSurface(RBX::Decal* d, RBX::SURFACES s)
+void getSurface(RBX::Decal* d, RBX::SURFACES s)
 {
 	GImage surfaces;
 	GImage surface;

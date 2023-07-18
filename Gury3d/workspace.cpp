@@ -11,7 +11,7 @@ RBX::Workspace* workspace;
 void RBX::Workspace::updatePVInstances(RBX::Instances* PVInstances)
 {
     RBX::PVInstance* part;
-    for (int i = 0; i < PVInstances->size(); i++)
+    for (size_t i = 0; i < PVInstances->size(); i++)
     {
         RBX::Instance* child = PVInstances->at(i);
         if (child->isRenderable || child->isAffectedByPhysics)
@@ -32,7 +32,7 @@ void RBX::Workspace::updatePVInstances(RBX::Instances* PVInstances)
 
 void RBX::Workspace::renderPVInstances(RenderDevice* d, RBX::Instances* instances, bool renderOpaque)
 {
-    for (int i = 0; i < instances->size(); i++)
+    for (size_t i = 0; i < instances->size(); i++)
     {
         RBX::Instance* child = instances->at(i);
 
@@ -58,7 +58,7 @@ void RBX::Workspace::renderPVInstances(RenderDevice* d, RBX::Instances* instance
 
 void RBX::Workspace::getPVInstances(RBX::Instances* instances, RBX::Instances* pvs)
 {
-    for (int i = 0; i < instances->size(); i++)
+    for (size_t i = 0; i < instances->size(); i++)
     {
         RBX::Instance* child = instances->at(i);
 

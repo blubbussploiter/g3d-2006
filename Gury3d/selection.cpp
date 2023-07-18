@@ -36,7 +36,7 @@ void RBX::Selection::renderSelection(RenderDevice* rd)
 	{
 		Vector3 size = selection->getSize();
 		Vector3 pos = selection->getPosition();
-		float div = 2, divY = 2.4;
+		float div = 2, divY = 2.4f;
 		switch (selection->shape)
 		{
 			case part:

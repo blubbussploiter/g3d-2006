@@ -70,6 +70,10 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)bin\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)obj\$(Configuration)\</IntDir>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -156,6 +160,7 @@
     <ClInclude Include="render_shapes.h" />
     <ClInclude Include="runservice.h" />
     <ClInclude Include="selection.h" />
+    <ClInclude Include="serializer.h" />
     <ClInclude Include="sounds.h" />
     <ClInclude Include="strings.h" />
     <ClInclude Include="welds.h" />
@@ -203,7 +208,6 @@
     <ClCompile Include="runservice.cpp" />
     <ClCompile Include="selection.cpp" />
     <ClCompile Include="serializer.cpp" />
-    <ClCompile Include="serializer.h" />
     <ClCompile Include="sound.cpp" />
     <ClCompile Include="sounds.cpp" />
     <ClCompile Include="surfaces.cpp" />

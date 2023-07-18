@@ -61,32 +61,32 @@ RBX::PVInstance* getPartConnectedToSurface(RBX::PVInstance* p, RBX::FACES surfac
     {
         case RBX::FRONT:
         {
-            r = new RBX::World::Ray(origin.translation, origin.getLookVector()*1.1);
+            r = new RBX::World::Ray(origin.translation, origin.getLookVector()*1.1f);
             break;
         }
         case RBX::BACK:
         {
-            r = new RBX::World::Ray(origin.translation, -origin.getLookVector()*1.1);
+            r = new RBX::World::Ray(origin.translation, -origin.getLookVector()*1.1f);
             break;
         }
         case RBX::RIGHT:
         {
-            r = new RBX::World::Ray(origin.translation, origin.getRightVector()*1.1);
+            r = new RBX::World::Ray(origin.translation, origin.getRightVector()*1.1f);
             break;
         }
         case RBX::LEFT:
         {
-            r = new RBX::World::Ray(origin.translation, -origin.getRightVector()*1.1);
+            r = new RBX::World::Ray(origin.translation, -origin.getRightVector()*1.1f);
             break;
         }
         case RBX::TOP:
         {
-            r = new RBX::World::Ray(origin.translation, origin.upVector()*1.1);
+            r = new RBX::World::Ray(origin.translation, origin.upVector()*1.1f);
             break;
         }
         case RBX::BOTTOM:
         {
-            r = new RBX::World::Ray(origin.translation, -origin.upVector()*1.1);
+            r = new RBX::World::Ray(origin.translation, -origin.upVector()*1.1f);
             break;
         }
     }
@@ -143,7 +143,7 @@ void RBX::PVInstance::render(RenderDevice* d)
 
             /* render Decals */
 
-            for (int i = 0; i < getChildren()->size(); i++)
+            for (size_t i = 0; i < getChildren()->size(); i++)
             {
                 RBX::Instance* child = getChildren()->at(i);
                 if (!child)
@@ -183,7 +183,7 @@ void RBX::PVInstance::renderFace(FACES face, bool isAlpha, bool isDrawingDecal)
     float alpha = 1;
 
     realSz = (size) / 2;
-    realSz.y /= 1.2;
+    realSz.y /= 1.2f;
 
     if (!isAlpha && transparency <= 1)
     {

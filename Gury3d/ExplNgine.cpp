@@ -42,8 +42,8 @@ void collision(void* data, dGeomID o1, dGeomID o2)
 			contact[i].surface.mu = 0.4f; //Friction
 			contact[i].surface.slip1 = 0.0f;
 			contact[i].surface.slip2 = 0.0f;
-			contact[i].surface.soft_erp = 0.8;
-			contact[i].surface.soft_cfm = 0.01;
+			contact[i].surface.soft_erp = 0.8f;
+			contact[i].surface.soft_cfm = 0.01f;
 
 			dJointID c = dJointCreateContact(world, group, contact + i);
 			dJointAttach(c, b1, b2);
@@ -224,13 +224,13 @@ void RBX::XplicitNgine::update()
 	checkBodies(RBX::Workspace::singleton()->getChildren());
 	dJointGroupEmpty(contactgroup);
 	dSpaceCollide(physSpace, 0, &collision);
-	dWorldQuickStep(physWorld, 0.09998);
+	dWorldQuickStep(physWorld, 0.09998f);
 }
 
 void RBX::XplicitNgine::checkBodies(RBX::Instances* PVInstances)
 {
 	RBX::PVInstance* part;
-	for (int i = 0; i < PVInstances->size(); i++)
+	for (size_t i = 0; i < PVInstances->size(); i++)
 	{
 		part = (RBX::PVInstance*)PVInstances->at(i);
 

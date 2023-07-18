@@ -27,7 +27,7 @@ namespace RBX
 	{
 		RBX::Instances* children;
 		children = m->getChildren();
-		for (int i = 0; i < children->size(); i++)
+		for (size_t i = 0; i < children->size(); i++)
 		{
 			RBX::Instance* child = children->at(i);
 			if (child->getClassName() == "PVInstance")

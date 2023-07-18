@@ -5,7 +5,7 @@
 
 #include "workspace.h"
 
-rapidxml::xml_document<> doc;
+static rapidxml::xml_document<> doc;
 
 bool RBX::Serializer::checkTag()
 {
@@ -65,7 +65,7 @@ CoordinateFrame readCFrame(rapidxml::xml_node<>* node)
 	r21 = std::stof(node->first_node("R21")->value());
 	r22 = std::stof(node->first_node("R22")->value());
 
-	y /= 1.2;
+	y /= 1.2f;
 	cf = CoordinateFrame(Matrix3(r00, r01, r02, r10, r11, r12, r20, r21, r22), Vector3(x, y, z));
 
 	return cf;
@@ -141,7 +141,7 @@ void iterateNode(rapidxml::xml_node<>* scanNode)
 	}
 }
 
-void RBX::Serializer::load(std::string fileName)
+void RBX::Serializer::load(const std::string& fileName)
 {
 	rapidxml::file<> file(fileName.c_str());
 

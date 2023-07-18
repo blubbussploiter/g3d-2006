@@ -14,7 +14,7 @@ bool isInitialized;
 void RBX::Camera::tiltUp(double deg, bool enactedByZoom)
 {
     CoordinateFrame frame = CoordinateFrame(camera->getCoordinateFrame().rotation, camera->getCoordinateFrame().translation);
-    pan(&frame, 0, toRadians(deg), enactedByZoom, 0.09999988);
+    pan(&frame, 0, toRadians(deg), enactedByZoom, 0.09999988f);
     setFrame(frame);
 }
 
@@ -70,7 +70,8 @@ void RBX::Camera::update(Rendering::G3DApp* app)
 
     GetCursorPos(&oldMouse);
 
-    if(!isInFirstPerson)Camera::singleton()->pan(&cframe, 0, 0, 0.8);
+    if(!isInFirstPerson)
+        Camera::singleton()->pan(&cframe, 0, 0);
     camera->setCoordinateFrame(cframe);
 }
 

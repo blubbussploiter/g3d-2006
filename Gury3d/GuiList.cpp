@@ -20,7 +20,7 @@ void RBX::Gui::GuiList::render(RenderDevice* d)
 		end = (pos + size);
 	}
 
-	for (int i = 0; i < children.size(); i++)
+	for (size_t i = 0; i < children.size(); i++)
 	{
 		GuiObject* c = children.at(i);
 		Vector2 _pos = pos;
@@ -35,7 +35,7 @@ void RBX::Gui::GuiList::render(RenderDevice* d)
 		c->render(d);
 	}
 
-	Draw::box(Box(Vector3(pos.x, pos.y, 0), Vector3(end.x, end.y, 0)), d, Color4(0.5, 0.5, 0.5, 0.3), Color4::CLEAR);
+	Draw::box(Box(Vector3(pos.x, pos.y, 0), Vector3(end.x, end.y, 0)), d, Color4(0.5f, 0.5f, 0.5f, 0.3f), Color4::CLEAR);
 
 	if (!listTitle.empty())
 	{

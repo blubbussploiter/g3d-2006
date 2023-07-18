@@ -63,7 +63,7 @@ namespace RBX
 		void setCamera(GCamera* c) { camera = c; }
 
 		//float getLerp() { return 0.89999998; }
-		float getLerp() { return 0.49999998; }
+		float getLerp() { return 0.49999998f; }
 
 		virtual void move();
 

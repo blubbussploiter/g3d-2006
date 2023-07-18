@@ -20,11 +20,10 @@ namespace RBX
 			void renderDecals();
 			void render(RenderDevice* d);
 			void renderFace(RBX::FACES face, bool isAlpha=0, bool isDrawingDeca=0);
-			Mesh()
+			Mesh() : mesh_scale(1.25f, 1.25f, 1.25f)
 			{
 				setClassName("PVMesh");
 				setName("PVMesh");
-				mesh_scale = Vector3(1.25, 1.25, 1.25);
 			}
 			virtual ~Mesh() {}
 		};

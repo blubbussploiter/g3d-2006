@@ -46,7 +46,7 @@ Instance* RBX::Instance::getParent()
 Instance* RBX::Instance::findFirstChild(std::string name)
 {
 	Instance* child;
-	for (int i = 0; i < getChildren()->size(); i++)
+	for (size_t i = 0; i < getChildren()->size(); i++)
 	{
 		child = getChildren()->at(i);
 		if (child && child->getName() == name)
