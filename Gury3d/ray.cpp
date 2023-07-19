@@ -11,7 +11,7 @@ RBX::PVInstance* RBX::World::Ray::getPartFromRay()
 	nearest = inf();
 
 	RBX::Workspace::singleton()->getPVInstances(RBX::Workspace::singleton()->getChildren(), instances);
-	for (int i = 0; i < instances->size(); i++)
+	for (size_t i = 0; i < instances->size(); i++)
 	{
 		RBX::PVInstance* child = static_cast<RBX::PVInstance*>(instances->at(i));
 

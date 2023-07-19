@@ -35,7 +35,7 @@ void RBX::Render::Mesh::renderDecals()
 {
 	RBX::Instances* children;
 	children = getParent()->getChildren();
-	for (int i = 0; i < children->size(); i++)
+	for (size_t i = 0; i < children->size(); i++)
 	{
 		RBX::Instance* child = children->at(i);
 		if (child->getClassName() == "Decal")

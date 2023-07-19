@@ -13,7 +13,7 @@ namespace RBX
 	private:
 		static bool checkTag();
 	public:
-		static void load(std::string fileName);
+		static void load(const std::string& fileName);
 	};
 }
 

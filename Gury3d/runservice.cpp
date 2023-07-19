@@ -21,6 +21,7 @@ void RBX::RunService::update()
 
 RBX::RunService* RBX::RunService::singleton()
 {
-    if (!runService) runService = new RunService();
+    if (!runService)
+        runService = new RunService();
     return runService;
 }

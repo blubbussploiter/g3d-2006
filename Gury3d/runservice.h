@@ -41,8 +41,8 @@ namespace RBX
 
 			dWorldSetGravity(physWorld, 0, -9.81F, 0);
 			dWorldSetAutoDisableSteps(physWorld, 5);
-			dWorldSetAutoDisableLinearThreshold(physWorld, 0.1);
-			dWorldSetAutoDisableAngularThreshold(physWorld, 0.1);
+			dWorldSetAutoDisableLinearThreshold(physWorld, 0.1f);
+			dWorldSetAutoDisableAngularThreshold(physWorld, 0.1f);
 			//dWorldSetERP(physWorld, 0.8);
 		}
 	};

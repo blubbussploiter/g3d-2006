@@ -24,14 +24,14 @@ RBX::Gui::GuiRoot* RBX::Gui::singleton()
 void RBX::Gui::GuiRoot::render(RenderDevice* d)
 {
 	d->push2D();
-	for (int i = 0; i < objects.size(); i++)
+	for (size_t i = 0; i < objects.size(); i++)
 		objects.at(i)->render(d);
 	d->pop2D();
 }
 
 void RBX::Gui::GuiRoot::doButtonLogic(UserInput* ui, RenderDevice* d)
 {
-	for (int i = 0; i < objects.size(); i++)
+	for (size_t i = 0; i < objects.size(); i++)
 		if (objects.at(i)->isButton)
 			((GuiButton*)(objects.at(i)))->handleMouse(ui);
 }

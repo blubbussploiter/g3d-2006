@@ -231,6 +231,9 @@
     <ClInclude Include="rbxwindow.h">
       <Filter>Header Files\dep</Filter>
     </ClInclude>
+    <ClInclude Include="serializer.h">
+      <Filter>Header Files\services\serializer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -307,9 +310,6 @@
     </ClCompile>
     <ClCompile Include="iobfix.cpp">
       <Filter>Source Files\dep</Filter>
-    </ClCompile>
-    <ClCompile Include="serializer.h">
-      <Filter>Header Files\services\serializer</Filter>
     </ClCompile>
     <ClCompile Include="serializer.cpp">
       <Filter>Source Files\services\serializer</Filter>

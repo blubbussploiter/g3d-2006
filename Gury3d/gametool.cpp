@@ -45,7 +45,6 @@ void RBX::GameTool::update(RenderDevice* rd, UserInput* ui)
 	if (pv)
 	{
 		Vector3 originrot;
-		float y;
 
 		lastPosition = pv->getPosition();
 		originrot = pv->getEulerRotation();

@@ -66,7 +66,7 @@ void RBX::BackpackItem::render(RenderDevice* rd)
 		number = new Gui::GuiLabel();
 
 		frame->size = Vector2(15, 15);
-		frame->background = Color4(0.8, 0.8, 0.8, 1);
+		frame->background = Color4(0.8f, 0.8f, 0.8f, 1.0f);
 
 		number->textColor = Color3::white();
 		number->sz = 10;

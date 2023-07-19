@@ -2,6 +2,9 @@
 #define RBX_MATH_H
 #include <G3DAll.h>
 
+#define RBX_PI  3.1415927
+#define RBX_TAU 6.2831855
+
 namespace RBX
 {
     namespace Math
@@ -14,10 +17,10 @@ namespace RBX
 
             u.y = v.x;
             y = v.y;
-            u.unitize(0.000001);
+            u.unitize(0.000001f);
             result = acos(u.y);
             if (y < 0.0)
-                return 6.2831855 - result;
+                return RBX_TAU - result;
             return result;
         }
         static double radWrap(float rad)
@@ -26,10 +29,10 @@ namespace RBX
             float v2; // [esp+Ch] [ebp-4h]
 
             result = rad;
-            if (rad < -3.1415927 || result >= 3.1415927)
+            if (rad < -RBX_PI || result >= RBX_PI)
             {
-                v2 = floor((result + 3.1415927) * 0.15915495);
-                return rad - (double)(int)v2 * 6.283185;
+                v2 = floor((result + RBX_PI) * 0.15915495);
+                return rad - (double)(int)v2 * RBX_TAU;
             }
             return result;
         }

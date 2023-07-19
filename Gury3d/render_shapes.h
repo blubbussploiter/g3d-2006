@@ -128,12 +128,11 @@ namespace RBX
 			RBX::RunService::singleton()->getPhysics()->createBody(i);
 			return i;
 		}
-		PVInstance()
+		PVInstance() :
+			cframe(), // will initialize identity cframe by default
+			size(4.0f, 1.2f, 2.0f),
+			color(0.639216f, 0.635294f, 0.643137f)
 		{
-			cframe = CoordinateFrame(Vector3(0, 0, 0));
-			size = Vector3(4, 1.2, 2);
-			color = Color3(0.639216, 0.635294, 0.643137);
-
 			setClassName("PVInstance");
 			setName("PVInstance");
 

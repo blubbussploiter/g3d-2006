@@ -59,20 +59,20 @@ void RBX::Network::Player::loadCharacter()
 
 	headMesh->fromFile(GetFileInPath("/content/font/head.mesh"));
 
-	torso->setSize(Vector3(2, 2.2, 1));
-	rArm->setSize(Vector3(1, 2.2, 1));
-	lArm->setSize(Vector3(1, 2.2, 1));
-	rLeg->setSize(Vector3(1, 2.2, 1));
-	rLeg->setSize(Vector3(1, 2.2, 1));
-	lLeg->setSize(Vector3(1, 2.2, 1));
+	torso->setSize(Vector3(2.0f, 2.2f, 1.0f));
+	rArm->setSize(Vector3(1, 2.2f, 1));
+	lArm->setSize(Vector3(1, 2.2f, 1));
+	rLeg->setSize(Vector3(1, 2.2f, 1));
+	rLeg->setSize(Vector3(1, 2.2f, 1));
+	lLeg->setSize(Vector3(1, 2.2f, 1));
 
 	torso->setPosition(Vector3(0, 80, 0));
 
-	rArm->setPosition(Vector3(1.5,  torso->getPosition().y+0.06, 0));
-	lArm->setPosition(Vector3(-1.5, torso->getPosition().y+0.06, 0));
-	lLeg->setPosition(Vector3(0.49,  torso->getPosition().y - 1.6, 0));
-	rLeg->setPosition(Vector3(-0.5, torso->getPosition().y - 1.6, 0));
-	head->setPosition(Vector3(0, torso->getPosition().y + 1.25, 0));
+	rArm->setPosition(Vector3(1.5f,  torso->getPosition().y+0.06f, 0));
+	lArm->setPosition(Vector3(-1.5f, torso->getPosition().y+0.06f, 0));
+	lLeg->setPosition(Vector3(0.49f,  torso->getPosition().y - 1.6f, 0));
+	rLeg->setPosition(Vector3(-0.5f, torso->getPosition().y - 1.6f, 0));
+	head->setPosition(Vector3(0, torso->getPosition().y + 1.25f, 0));
 
 	rArm->setBrickColor(24);
 	lArm->setBrickColor(24);
@@ -225,7 +225,7 @@ void RBX::Network::Players::addPlayer(Player* player)
 
 void RBX::Network::Players::updatePlayerList()
 {
-	for (int i = 0; i < players.size(); i++)
+	for (size_t i = 0; i < players.size(); i++)
 	{
 		Player* p = players.at(i);
 		RBX::Gui::GuiLabel* lbl = p->getGuiName();

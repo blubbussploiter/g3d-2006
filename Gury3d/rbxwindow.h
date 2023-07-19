@@ -29,7 +29,6 @@ static bool exitFullscreen(HWND hwnd, int windowX, int windowY, int windowedWidt
 static bool enterFullscreen(HWND hwnd, int fullscreenWidth, int fullscreenHeight, int colourBits, int refreshRate) {
     DEVMODE fullscreenSettings;
     bool isChangeSuccessful;
-    RECT windowBoundary;
 
     EnumDisplaySettings(NULL, 0, &fullscreenSettings);
     fullscreenSettings.dmPelsWidth = fullscreenWidth;
