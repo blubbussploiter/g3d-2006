@@ -11,6 +11,7 @@ Reflection::PropertyDescriptor<RBX::ModelInstance, RBX::ControllerTypes> RBX::Mo
 
 void RBX::ModelInstance::setController(int c)
 {
+	/*
 	switch (c)
 	{
 	case KeyboardRight:
@@ -25,6 +26,7 @@ void RBX::ModelInstance::setController(int c)
 	}
 	}
 	RBX::addController(controller);
+ */
 }
 
 /* positional things */
