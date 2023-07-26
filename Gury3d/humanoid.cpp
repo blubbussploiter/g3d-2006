@@ -2,7 +2,6 @@
 #include "rbxmath.h"
 
 #include "camera.h"
-#include "welds.h"
 
 #include "sounds.h"
 #include "ray.h"
@@ -39,21 +38,20 @@ void RBX::Humanoid::correctHumanoidAttributes()
 
 bool RBX::Humanoid::isFalling()
 {
-    const dReal* lin;
+  //  const dReal* lin;
     if (!checkHumanoidAttributes())
         return 0;
-    lin = dBodyGetLinearVel(humanoidRootPart->body->body);
-
-    return !(lin[1] >= -0.1);
+  //  lin = dBodyGetLinearVel(humanoidRootPart->body->body);
+  //  return !(lin[1] >= -0.1);
 }
 
 bool RBX::Humanoid::isInAir()
 {
-    const dReal* lin;
+ //   const dReal* lin;
     if (!checkHumanoidAttributes())
         return 0;
-    lin = dBodyGetLinearVel(humanoidRootPart->body->body);
-    return (lin[1] > 0.1);
+  //  lin = dBodyGetLinearVel(humanoidRootPart->body->body);
+   // return (lin[1] > 0.1);
 }
 
 bool RBX::Humanoid::occluding(RBX::PVInstance* p, Vector3 dir)
@@ -70,7 +68,7 @@ bool RBX::Humanoid::occluding(RBX::PVInstance* p, Vector3 dir)
     r1->setIgnoreList(new Instances{ p->getParent() });
     rt1 = r1->getPartFromRay();
 
-    return (rt1 && rt1->body && (rt1->body->touchedPV == p));
+    return (rt1 && rt1->body);
 }
 
 bool RBX::Humanoid::isGrounded()
@@ -87,10 +85,7 @@ bool RBX::Humanoid::isGrounded()
     r1->setIgnoreList(new Instances{ getParent() });
     rt1 = r1->getPartFromRay();
 
-    if (!rt1)
-        return 0;
-
-    if (isFalling() || isInAir())
+    if (!rt1 || isFalling() || isInAir())
         return 0;
 
     return (rt1 != 0);
@@ -124,7 +119,8 @@ void RBX::Humanoid::setJump()
     if (isGrounded() && !isFalling() && !isInAir())
     {
         bsls_steps->stop();
-        dBodySetLinearVel(humanoidRootPart->body->body, walkDirection.x*2, jmpPower / 2.5, walkDirection.z * 2);
+        //dBodySetLinearVel(humanoidRootPart->body->body, walkDirection.x * 2, jmpPower / 2.5, walkDirection.z * 2);
+        whoosh->setStartPosition(1.2f);
         whoosh->play();
     }
 }
@@ -133,11 +129,9 @@ void RBX::Humanoid::balance()
 {
     PhysBody* body;
     body = humanoidRootPart->body;
-    if (body)
+    if (body) 
     {
-        dBodySetAngularVel(body->body, 0, 0, 0);
-        dBodySetForce(body->body, 0, 0, 0);
-        dBodySetTorque(body->body, 0, 0, 0);
+        //dBodySetAngularVel(body->body, 0, 0, 0);
     }
 
 }
@@ -153,27 +147,28 @@ void RBX::Humanoid::onDied()
 
 void RBX::Humanoid::step()
 {
+    return;
+
     Vector3 orig;
     Vector3 pos;
     Vector3 wlk;
 
     CoordinateFrame _old, look;
 
-    if (!isJoined())
-       health = 0;
-     
-    if (health == 0)
+    if (!health)
         onDied();
 
     if (checkHumanoidAttributes())
     {
         if (humanoidHead->getPosition().y < -200 && health > 0)
         {
-            health = 0;
+            onDied();
             getParent()->remove();
         }
         balance();
     }
+
+    if (!isJoined()) health = 0;
 
     switch (walkMode)
     {
@@ -187,7 +182,10 @@ void RBX::Humanoid::step()
             }
 
             if (!isGrounded())
+            {
+                bsls_steps->stop();
                 return;
+            }
 
             orig = humanoidHead->getPosition();
             _old = humanoidHead->getCFrame();
@@ -198,12 +196,17 @@ void RBX::Humanoid::step()
 
             if (walkDirection != Vector3::zero())
             {
+                CoordinateFrame lerpd;
                 wlk = lerp(_old.translation, pos, 0.65f);
 
                 if (!bsls_steps->isPlaying())
                     bsls_steps->play();
 
-                humanoidHead->setCFrame(_old.lerp(look, RBX::Camera::singleton()->getLerp()));
+                lerpd = _old.lerp(look, RBX::Camera::singleton()->getLerp());
+                humanoidHead->setCFrame(lerpd);
+
+                /*  walk code here: PLEASE someone. PLEASE just change this its SO ASS!!! */
+
                 humanoidHead->setPosition(wlk);
 
             }

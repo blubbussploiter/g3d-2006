@@ -9,7 +9,6 @@ void RBX::Render::Mesh::fromFile(std::string path)
 		nx, ny, nz,
 		ux, uy, uz;
 
-
 	fscanf(f, "version 1.00\n");
 	fscanf(f, "%d\n", &faces);
 
@@ -31,11 +30,23 @@ void RBX::Render::Mesh::fromFile(std::string path)
 	fclose(f);
 }
 
+void RBX::Render::Mesh::fromMeshType(MeshType types)
+{
+	switch (types)
+	{
+		case Head:
+		{
+			fromFile(GetFileInPath("/content/font/head.mesh"));
+			break;
+		}
+	}
+}
+
 void RBX::Render::Mesh::renderDecals()
 {
 	RBX::Instances* children;
 	children = getParent()->getChildren();
-	for (size_t i = 0; i < children->size(); i++)
+	for (unsigned int i = 0; i < children->size(); i++)
 	{
 		RBX::Instance* child = children->at(i);
 		if (child->getClassName() == "Decal")
@@ -58,7 +69,7 @@ void RBX::Render::Mesh::render(RenderDevice* d)
 	parent = (RBX::PVInstance*)getParent();
 	cframe = parent->getCFrame();
 
-	RBX::Lighting::singleton()->begin(d, cframe.translation, 25);
+	RBX::Lighting::singleton()->begin(d, 15.0f);
 	d->setObjectToWorldMatrix(cframe);
 
 	renderFace(RBX::FRONT);
@@ -67,7 +78,7 @@ void RBX::Render::Mesh::render(RenderDevice* d)
 	RBX::Lighting::singleton()->end(d);
 }
 
-void RBX::Render::Mesh::renderFace(RBX::FACES face, bool isAlpha, bool isDrawingDecal)
+void RBX::Render::Mesh::renderFace(RBX::NormalId face, bool isAlpha, bool isDrawingDecal)
 {
 	RBX::PVInstance* parent;
 	Color3 color;

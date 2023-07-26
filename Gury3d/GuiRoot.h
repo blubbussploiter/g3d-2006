@@ -43,11 +43,7 @@ namespace RBX
 			Color4 background;
 			Color4 outline;
 			virtual void render(RenderDevice* d);
-			GuiBox() : background(0.5f, 0.5f, 0.5f, 0.5f), outline(Color4::CLEAR) {}
-				/*
-				 * this is a proper way to initialize struct/class members
-				 * if you initialize them in the function body it will call the constructor twice which is not good
-				 */
+			GuiBox() {background = Color4(0.5f, 0.5f, 0.5f, 0.3f); outline = Color4::CLEAR;}
 		};
 
 		class GuiList : public GuiObject
@@ -88,14 +84,12 @@ namespace RBX
 
 			virtual void handleMouse(UserInput* ui);
 
-			GuiButton() :
-				titleColor(0.25f, 0.25f, 0.25f, 0.95f),
-				hoverColor(0.7f, 0.7f, 0.7f, 0.3f),
-				disabledColor(0.6f, 0.6f, 0.6f, 0.6f),
-				clickedColor(hoverColor)
-			{
-				isButton = true;
-				sz = 12;
+			GuiButton() {
+				isButton = true; sz = 12.f; 
+				titleColor = Color4(0.25f, 0.25f, 0.25f, 0.95f);
+				hoverColor = Color4(0.6f, 0.6f, 0.6f, 0.3f);
+				disabledColor = Color4(0.6f, 0.6f, 0.6f, 0.6f);
+				clickedColor = hoverColor;
 			}
 		};
 
@@ -134,7 +128,7 @@ namespace RBX
 			Color4 outlineColor;
 
 			virtual void render(RenderDevice* d);
-			GuiLabel() : title("GuiLabel"), sz(12), textColor(Color3::black()), outlineColor(Color4::CLEAR) {}
+			GuiLabel() : title("GuiLabel"), sz(12.f), textColor(Color3::black()), outlineColor(Color4::CLEAR) {}
 		};
 
 		class GuiMessage : public GuiObject
@@ -177,7 +171,8 @@ namespace RBX
 			extern void onFullscreenBtnClick(GuiButton* btn);
 		}
 
-		GuiRoot* singleton();
+		/* deprecated, use Datamodel->guiRoot */
+		GuiRoot* singleton(); 
 	}
 }
 

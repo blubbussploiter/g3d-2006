@@ -1,6 +1,11 @@
+#include "strings.h"
+
 #include "instance.h"
+#include "sounds.h"
 
 using namespace RBX;
+
+static RBX::Sound* pageTurn = RBX::Sound::fromFile(GetFileInPath("/content/sounds/pageturn.wav"));
 
 Reflection::PropertyDescriptorContainer* Instance::properties = new Reflection::PropertyDescriptorContainer();
 Reflection::PropertyDescriptor<Instance, std::string> Instance::prop_name("Name", Reflection::Types::TYPE_String, &Instance::getName, &Instance::setName, Instance::properties);
@@ -18,6 +23,8 @@ void RBX::Instance::remove()
 	}
 	for (RBX::Instance* i : *getChildren())
 		i->remove();
+	pageTurn->setVolume(0.2f);
+	pageTurn->play();
 }
 
 void RBX::Instance::setParent(Instance* instance)
@@ -46,7 +53,7 @@ Instance* RBX::Instance::getParent()
 Instance* RBX::Instance::findFirstChild(std::string name)
 {
 	Instance* child;
-	for (size_t i = 0; i < getChildren()->size(); i++)
+	for (unsigned int i = 0; i < getChildren()->size(); i++)
 	{
 		child = getChildren()->at(i);
 		if (child && child->getName() == name)

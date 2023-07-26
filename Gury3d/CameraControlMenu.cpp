@@ -5,12 +5,12 @@
 
 void RBX::Gui::CameraPanMenu::onArrowUpBtnClick(GuiButton* btn)
 {
-	RBX::Camera::singleton()->tiltDown();
+	RBX::Camera::singleton()->tiltDown(10.f);
 }
 
 void RBX::Gui::CameraPanMenu::onArrowDwnBtnClick(GuiButton* btn)
 {
-	RBX::Camera::singleton()->tiltUp();
+	RBX::Camera::singleton()->tiltUp(10.f);
 }
 
 void RBX::Gui::CameraPanMenu::onZoomOutBtnClick(GuiButton* btn)

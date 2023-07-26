@@ -1,14 +1,26 @@
+#include "stdout.h"
+#include "workspace.h"
+#include "jointservice.h"
 #include "runservice.h"
+#include "model.h"
 
 RBX::RunService* runService;
 
 void RBX::RunService::run()
 {
-    if (!physics)
-        physics = new XplicitNgine();
-
-    physics->init();
     isRunning = true;
+    reset();
+}
+
+void RBX::RunService::stop()
+{
+    isRunning = false;
+}
+
+void RBX::RunService::reset()
+{
+    RBX::Workspace::singleton()->update();
+    RBX::Workspace::singleton()->buildModelJoints();
 }
 
 void RBX::RunService::update()
@@ -21,7 +33,6 @@ void RBX::RunService::update()
 
 RBX::RunService* RBX::RunService::singleton()
 {
-    if (!runService)
-        runService = new RunService();
+    if (!runService) runService = new RunService();
     return runService;
 }

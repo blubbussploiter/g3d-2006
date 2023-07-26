@@ -1,4 +1,7 @@
 
+#ifndef PROPERTY_H
+#define PROPERTY_H
+
 #include <string>
 #include <vector>
 
@@ -90,3 +93,5 @@ namespace Reflection
 		PropertyDescriptor(std::string name, Types t, Get get, Set set, PropertyDescriptorContainer* container) : Property(t, name), getset(new GetSetImpl<Get, Set>(get, set)) { container->push(this); }
 	};
 }
+
+#endif

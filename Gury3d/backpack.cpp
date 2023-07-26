@@ -5,10 +5,11 @@
 void RBX::Backpack::keypress(UserInput* ui)
 {
 	G3D::Array<uint16_t> keycodes{};
+	RBX::BackpackItem* itm;
 	RBX::HopperBin* bin;
 	std::string keycode;
 	char first;
-	size_t index;
+	unsigned int index;
 
 	ui->pressedKeys(keycodes);
 	if (keycodes.size() > 0)
@@ -33,7 +34,7 @@ void RBX::Backpack::keypress(UserInput* ui)
 
 void RBX::Backpack::updateGui(RenderDevice* rd, UserInput* ui)
 {
-	for (size_t i = 0; i < getChildren()->size(); i++)
+	for (unsigned int i = 0; i < getChildren()->size(); i++)
 	{
 		RBX::HopperBin* bin = (RBX::HopperBin*)(getChildren()->at(i));
 		if (bin && bin->getClassName() == "HopperBin")

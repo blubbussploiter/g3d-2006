@@ -19,7 +19,7 @@ static std::string GetFileInPath(std::string file)
 	{
 		return name;
 	}
-	return std::string("");
+	return std::string();
 }
 
 #endif
