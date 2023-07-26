@@ -1,9 +1,11 @@
-#include "render_base.h"
+#include "rbx.h"
+#include "crashreporter.h"
 
 int main()
 {
-	printf("guryblox version 2.1.0 beta\nby whirlpool\n");
 	GAppSettings settings;
+
+	RBX::CrashReporter::singleton()->start();
 
 	settings.window.width = 820;
 	settings.window.height = 480;

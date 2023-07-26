@@ -2,10 +2,9 @@
 #define HUMANOID_H
 
 #include "part.h"
-#include "welds.h"
+#include "snaps.h"
 
 #include <G3DAll.h>
-#include <ode/ode.h>
 
 namespace RBX
 {
@@ -23,8 +22,6 @@ namespace RBX
 		Vector3 walkRotationVelocity;
 		
 		WalkMode walkMode;
-
-		dMass humanoidMass;
 
 	public:
 
@@ -48,7 +45,7 @@ namespace RBX
 		bool isGrounded();
 		bool isFalling();
 		bool isInAir();
-		bool isJoined() { RBX::Physics::Weld* w = humanoidRootPart->findFirstChildOfClass<RBX::Physics::Weld>("Weld"); return !(w->hasBeenCalledBroken && w->weldBroken()); }
+		bool isJoined() { return 1;/* update for jointservice */ }
 
 		bool checkHumanoidAttributes() { return (humanoidHead && humanoidRootPart && (humanoidRootPart->body && humanoidHead->body) && health > 0); }
 

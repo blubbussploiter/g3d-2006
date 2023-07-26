@@ -1,6 +1,8 @@
 #include "backpack.h"
 #include "players.h"
 
+static RBX::Sound* ping = RBX::Sound::fromFile(GetFileInPath("/content/sounds/electronicpingshort.wav"));
+
 void drawOutline(RenderDevice* rd, Vector2 from, Vector2 to, float thickness, Color3 color)
 {
 	Vector2 p0, p1, p2, p3, p4, p5, p6, p7;
@@ -66,7 +68,7 @@ void RBX::BackpackItem::render(RenderDevice* rd)
 		number = new Gui::GuiLabel();
 
 		frame->size = Vector2(15, 15);
-		frame->background = Color4(0.8f, 0.8f, 0.8f, 1.0f);
+		frame->background = Color4(0.8f, 0.8f, 0.8f, 1.f);
 
 		number->textColor = Color3::white();
 		number->sz = 10;
@@ -139,6 +141,7 @@ void RBX::onClickFn(RBX::Gui::GuiButton* b) /* move this to Backpack::activateBi
 	RBX::BackpackItem* active;
 
 	activeBin = player->activeBin;
+	ping->play();
 
 	if (!player)
 		return;

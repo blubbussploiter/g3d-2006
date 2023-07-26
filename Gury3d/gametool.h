@@ -11,6 +11,7 @@ namespace RBX
 	private:
 		RBX::PVInstance* dragged;
 		Vector3 lastPosition;
+		btVector3 lastAngularVelocity, lastLinearVelocity;
 	public:
 		void update(RenderDevice* rd, UserInput* ui);
 		void deactivate();

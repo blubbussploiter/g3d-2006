@@ -9,38 +9,57 @@ RBX::Lighting* RBX::Lighting::singleton()
     return lighting;
 }
 
-void RBX::Lighting::begin(RenderDevice* device, Vector3 Position, float shininess)
+void RBX::Lighting::begin(RenderDevice* device, float shininess)
 {
 
     LightingParameters lighting;
-    lighting.setLatitude(latitude);
-    lighting.setTime(toSeconds(14, 0, PM));
+    Color3 ambientColor, dynamicTop, dynamicBottom;
+    Vector3 toLight;
+    
+    int num = 0;
 
+    lighting = getParameters();
     device->pushState();
 
     device->enableLighting();
 
-    if (shininess > 0)
-    {
-        device->setSpecularCoefficient(1);
-        device->setSpecularCoefficient(Color3::white());
-        device->setShininess(shininess);
-    }
+    device->setSpecularCoefficient(0);
+    device->setSpecularCoefficient(Color3::white());
+    device->setShininess(shininess);
+
+    toLight.x = -0.40000001f;
+    toLight.y = -1.0f;
+    toLight.z = 0.1f;
+
+    ambientColor = (bottom_ambient + top_ambient) / 2.0f;
+
+    dynamicTop = top_ambient - ambientColor;
+    dynamicBottom = bottom_ambient - ambientColor;
 
     device->setColorClearValue(clear_color);
-    device->setAmbientLightColor(Color3(1,1,1));
+    device->setAmbientLightColor(ambientColor);
 
-    device->setLight(0, GLight::directional(lighting.lightDirection, bottom_ambient));
-    device->setAmbientLightColor(bottom_ambient);
-    //device->setAmbientLightColor(bottom_ambient);
+    device->setLight(0, GLight::directional(lighting.lightDirection, spotLight_color, 1, 0));
+    device->setLight(1, GLight::directional(toLight, dynamicBottom, 1, 1));
+    device->setLight(2, GLight::directional(Vector3::unitY(), dynamicTop, 1, 1));
+
+    device->setAmbientLightColor(top_ambient);
 
 }
 
 void RBX::Lighting::end(RenderDevice* device)
 {
-     device->setLight(0, 0);
-    // device->setLight(1, 0);
-    // device->setLight(2, 0);
     device->disableLighting();
     device->popState();
+}
+
+LightingParameters RBX::Lighting::getParameters()
+{
+    LightingParameters lighting = LightingParameters();
+
+    lighting.setLatitude(latitude);
+    lighting.setTime(toSeconds(14, 0, PM));
+    lighting.lightDirection = lighting.trueSunPosition;
+
+    return lighting;
 }

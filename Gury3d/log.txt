@@ -1,5 +1,5 @@
 Application Log
-Start: Mon Jun 26 19:05:36 2023
+Start: Thu Jul 20 21:23:48 2023
 
 _____________________________________________________
 
@@ -141,16 +141,3 @@ System {
 Warning: G3D::GApp could not load font "console-small.fnt".
 This may be because the G3D::GApp::Settings::dataDir was not
 properly set in main().
-
-**************************
-
-Critical Error - Gury3d.exe
-File not found: ".\content\sky/plainsky/null_plainsky512_ft.jpg"
-.\content\sky/plainsky/null_plainsky512_ft.jpg
-
-Expression: false
-C:\Users\boris\Downloads\g3d-src-6_09\source\GLG3Dcpp\GApp.cpp:216
-
-Last Error (0x00000003): The system cannot find the path specified.
-
-

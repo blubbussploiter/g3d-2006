@@ -2,7 +2,7 @@
 #include "camera.h"
 #include "sounds.h"
 
-RBX::Sound* switch3 = RBX::Sound::fromFile(GetFileInPath("/content/sounds/SWITCH3.wav"));
+static RBX::Sound* switch3 = RBX::Sound::fromFile(GetFileInPath("/content/sounds/SWITCH3.wav"));
 
 void RBX::Camera::lookAt(const Vector3& position)
 {
@@ -10,7 +10,8 @@ void RBX::Camera::lookAt(const Vector3& position)
 	yaw = aTan2(look.x, -look.z);
 
 	pitch = -aTan2(look.y, distance(look.x, look.z));
-	CoordinateFrame frame = cframe.translation;
+	CoordinateFrame frame = CoordinateFrame();
+	frame.translation = cframe.translation;
 	frame.rotation = Matrix3::fromEulerAnglesZYX(0, -yaw, -pitch);
 	cframe = frame;
 }
@@ -18,8 +19,7 @@ void RBX::Camera::lookAt(const Vector3& position)
 void RBX::Camera::setFrame(const CoordinateFrame& cf)
 {
 	Vector3 look = cf.getLookVector();
-	cframe.translation = lerp(cframe.translation, cf.translation, 0.69999998f);
-	cframe.rotation = cf.rotation;
+	cframe = cf;
 	lookAt(cframe.translation + look);
 	focusPosition = cframe.translation + cframe.lookVector() * zoom;
 }
@@ -55,10 +55,9 @@ void RBX::Camera::pan(CoordinateFrame* frame, float spdX, float spdY, bool shoul
 
 	pos = Vector3(sin(-yaw) * zoom * cos(pitch), sin(pitch) * zoom, cos(-yaw) * zoom * cos(pitch)) + focusPosition;
 
-	if(shouldLerp)
-		frame->translation = lerp(_old, pos, lerpTime);
-	else
-		frame->translation = pos;
+	frame->translation = pos;
+	if(shouldLerp) frame->translation = lerp(_old, pos, lerpTime);
+
 	frame->lookAt(focusPosition);
 }
 
@@ -66,7 +65,6 @@ void RBX::Camera::panLock(CoordinateFrame* frame, float spdX, float spdY)
 {
 
 	int sign = 0;
-
 
 	yaw = toDegrees(yaw);
 	if ((((yaw - fmod(yaw, 45)) / 45) * 45) < 0)
@@ -94,13 +92,12 @@ void RBX::Camera::panLock(CoordinateFrame* frame, float spdX, float spdY)
 void RBX::Camera::Zoom(short delta)
 {
 	
-	CoordinateFrame frame = cframe;
 	isZooming = 1;
 
 	switch3->play();
 
 	if (delta>0) { // Mouse wheel up
-		CoordinateFrame zoomFrame = frame+frame.lookVector()*(zoom/3.5);
+		CoordinateFrame zoomFrame = cframe + cframe.lookVector()*(zoom/3.5);
 		zoom=(zoomFrame.translation-focusPosition).magnitude();
 		if (zoom>CAM_ZOOM_MIN)
 		{
@@ -110,11 +107,11 @@ void RBX::Camera::Zoom(short delta)
 		else
 		{
 			zoom=CAM_ZOOM_MIN;
-			refreshZoom(frame);
+			refreshZoom(cframe);
 		}
 	}
 	else {
-		CoordinateFrame zoomFrame = frame-frame.lookVector()*(zoom/3.5);
+		CoordinateFrame zoomFrame = cframe - cframe.lookVector()*(zoom/3.5);
 		zoom=(zoomFrame.translation-focusPosition).magnitude();
 		if (zoom<CAM_ZOOM_MAX)
 		{
@@ -124,7 +121,7 @@ void RBX::Camera::Zoom(short delta)
 		else
 		{
 			zoom=CAM_ZOOM_MAX;
-			refreshZoom(frame);
+			refreshZoom(cframe);
 		}
 	}
 }

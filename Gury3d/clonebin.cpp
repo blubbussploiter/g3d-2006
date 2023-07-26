@@ -39,13 +39,12 @@ void RBX::CloneBin::update(RenderDevice* rd, UserInput* ui)
 	{
 		RBX::PVInstance* i;
 		i = RBX::Mouse::getTarget();
-		if (active && !i)
+		if (active)
 		{
-			Rendering::cursor_custom = Texture::fromFile(GetFileInPath("/content/textures/CloneCursor.png"));
-		}
-		else
-		{
-			Rendering::cursor_custom = Texture::fromFile(GetFileInPath("/content/textures/CloneOverCursor.png"));
+			if(!i || (i && i->getLocked()))
+				Rendering::cursor_custom = Texture::fromFile(GetFileInPath("/content/textures/CloneCursor.png"));
+			else
+				Rendering::cursor_custom = Texture::fromFile(GetFileInPath("/content/textures/CloneOverCursor.png"));
 		}
 	}
 

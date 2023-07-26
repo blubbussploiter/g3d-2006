@@ -6,40 +6,36 @@
 #include "strings.h"
 #include "instance.h"
 
+#include "pvenums.h"
+
 namespace RBX
 {
-	enum FACES
-	{
-		TOP,
-		BOTTOM,
-		FRONT,
-		BACK,
-		LEFT,
-		RIGHT
-	};
-
 	class PVInstance;
 
 	class Decal : public RBX::Instance
 	{
 	private:
 		TextureRef texture;
-		FACES face;
+		NormalId face;
 		unsigned int openGLid;
 	public:
-		GLenum dfactor;
+		GLenum sfactor, dfactor;
 		Color4 decalColor;
+		float transparency;
 		bool isDefinedSurfaceDecal; /* whether its a hardcoded engine decal or user defined decal. (should be distilled by part color) */
 		TextureRef getTexture() { return texture; }
 		void setTexture(TextureRef r) { texture = r; openGLid = 0; }
-		void fromFile(std::string file, int interpolate=Texture::BILINEAR_NO_MIPMAP);
+		void fromFile(std::string file, Texture::WrapMode wrap = Texture::TILE, Texture::InterpolateMode interpolate=Texture::BILINEAR_NO_MIPMAP);
 		unsigned int getGLid() { if (!openGLid) openGLid = texture->openGLID(); return openGLid; }
-		void setFace(FACES _face) { face = _face; }
+		NormalId getFace() { return face; }
+		void setFace(NormalId _face) { face = _face; }
 		void render(PVInstance* p);
 		Decal() {
 			openGLid = 0; 
-			face = FACES::TOP; 
+			face = NormalId::TOP; 
+			sfactor = GL_SRC_ALPHA;
 			dfactor = GL_ONE_MINUS_SRC_ALPHA;
+			transparency = 0.f;
 			setClassName("Decal");
 			setName("Decal");
 		}

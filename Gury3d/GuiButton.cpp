@@ -58,7 +58,7 @@ void RBX::Gui::GuiButton::handleMouse(UserInput* ui)
 
 	/* Clicked */
 
-	if (ui->keyDown(SDL_LEFT_MOUSE_KEY))
+	if (ui->keyReleased(SDL_LEFT_MOUSE_KEY))
 	{
 		if (!clicked)
 		{

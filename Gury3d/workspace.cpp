@@ -4,11 +4,46 @@
 #include "part.h"
 #include "model.h"
 
-#include "welds.h"
+#include "stdout.h"
 
 RBX::Workspace* workspace;
 
-void RBX::Workspace::updatePVInstances(RBX::Instances* PVInstances)
+RBX::Extents RBX::Workspace::getGameExtents()
+{
+    Vector3 high = Vector3::zero();
+    RBX::Instances* pvs = new RBX::Instances();
+
+    getPVInstances(getChildren(), pvs);
+    for (unsigned int i = 0; i < pvs->size(); i++)
+    {
+        RBX::PVInstance* pv;
+        pv = (RBX::PVInstance*)(pvs->at(i));
+        high += pv->getLocalExtents().high;
+    }
+
+    pvs->clear();
+    delete pvs;
+
+    return RBX::Extents(-high, high);
+}
+
+void RBX::Workspace::buildModelJoints()
+{
+    RBX::Instances* children;
+    children = getChildren();
+
+    for (unsigned int i = 0; i < children->size(); i++)
+    {
+        RBX::Instance* child;
+        child = children->at(i);
+        if (child->getClassName() == "Model")
+        {
+            static_cast<RBX::ModelInstance*>(child)->buildJoints();
+        }
+    }
+}
+
+void updatePVInstances(RBX::Instances* PVInstances)
 {
     RBX::PVInstance* part;
     for (size_t i = 0; i < PVInstances->size(); i++)
@@ -19,11 +54,7 @@ void RBX::Workspace::updatePVInstances(RBX::Instances* PVInstances)
             if (child->getClassName() == "PVInstance")
             {
                 part = (RBX::PVInstance*)child;
-                RBX::RunService::singleton()->getPhysics()->updateBody(part);
-            }
-            if (child->getClassName() == "Weld")
-            {
-                ((RBX::Physics::Weld*)(child))->createWeld();
+                RBX::RunService::singleton()->getPhysics()->createBody(part);
             }
         }
         updatePVInstances(child->getChildren());
@@ -32,7 +63,7 @@ void RBX::Workspace::updatePVInstances(RBX::Instances* PVInstances)
 
 void RBX::Workspace::renderPVInstances(RenderDevice* d, RBX::Instances* instances, bool renderOpaque)
 {
-    for (size_t i = 0; i < instances->size(); i++)
+    for (unsigned int i = 0; i < instances->size(); i++)
     {
         RBX::Instance* child = instances->at(i);
 
@@ -47,7 +78,10 @@ void RBX::Workspace::renderPVInstances(RenderDevice* d, RBX::Instances* instance
                 }
                 if (inst->getTransparency() > 0 && !renderOpaque) 
                 {
-                    inst->render(d);
+                    if (inst->getTransparency() < 1)
+                    {
+                        inst->render(d);
+                    }
                 }
             }
         }
@@ -58,7 +92,7 @@ void RBX::Workspace::renderPVInstances(RenderDevice* d, RBX::Instances* instance
 
 void RBX::Workspace::getPVInstances(RBX::Instances* instances, RBX::Instances* pvs)
 {
-    for (size_t i = 0; i < instances->size(); i++)
+    for (unsigned int i = 0; i < instances->size(); i++)
     {
         RBX::Instance* child = instances->at(i);
 
@@ -77,6 +111,7 @@ void RBX::Workspace::render(RenderDevice* d)
 
 void RBX::Workspace::update()
 {
+    if (!RBX::RunService::singleton()->isRunning) return;
     updatePVInstances(getChildren());
 }
 

@@ -1,22 +1,33 @@
+#include <thread>
+#include <map>
+
 #include "serializer.h"
 
 #include "instance.h"
 #include "part.h"
 
 #include "workspace.h"
+#include "stdout.h"
 
-static rapidxml::xml_document<> doc;
+#include "classes.h"
+rapidxml::xml_document<> doc;
+
+static std::map<std::string, int> xml_tokens =
+{
+	{ "Vector3", 0},
+	{ "CFrame", 1},
+	{ "CoordinateFrame", 2},
+	{ "Color3", 3},
+	{ "string", 4},
+	{ "token", 5},
+	{ "int", 6},
+	{ "float", 7},
+	{ "bool", 8}
+};
 
 bool RBX::Serializer::checkTag()
 {
 	return !strcmp(doc.first_node()->name(), "roblox");
-}
-
-RBX::Instance* fromName(const char* name)
-{
-	if (!strcmp(name, "Part"))
-		return new RBX::PartInstance();
-	return nullptr;
 }
 
 template<typename V>
@@ -47,6 +58,13 @@ Vector3 readVector3(rapidxml::xml_node<>* node)
 	return v;
 }
 
+Color3 readColor3(rapidxml::xml_node<>* node)
+{
+	Color3 color;
+	color = Color3::white();
+	return color;
+}
+
 CoordinateFrame readCFrame(rapidxml::xml_node<>* node)
 {
 	CoordinateFrame cf;
@@ -65,37 +83,70 @@ CoordinateFrame readCFrame(rapidxml::xml_node<>* node)
 	r21 = std::stof(node->first_node("R21")->value());
 	r22 = std::stof(node->first_node("R22")->value());
 
-	y /= 1.2f;
-	cf = CoordinateFrame(Matrix3(r00, r01, r02, r10, r11, r12, r20, r21, r22), Vector3(x, y, z));
+	Matrix3 matrix;
+
+	matrix = Matrix3(r00, r01, r02, r10, r11, r12, r20, r21, r22);
+	cf = CoordinateFrame(matrix, Vector3(x, y, z));
 
 	return cf;
 }
 
 void setProperty(rapidxml::xml_node<>* node, RBX::Instance* instance, std::string propertyType, std::string propertyValue, std::string propertyName)
 {
+
+	int token;
 	Reflection::Property* property;
+
 	property = instance->properties->property(propertyName);
 
-	if (!property)
-		return;
-
-	if (propertyType == "Vector3")
-		setValue<Vector3>(instance, property, readVector3(node));
-
-	if (propertyType == "CoordinateFrame")
-		setValue<CoordinateFrame>(instance, property, readCFrame(node));
-
-	if (propertyType == "string")
-		setValue<std::string>(instance, property, propertyValue);
-
-	if (propertyType == "token" || propertyType == "int")
-		setValue<int>(instance, property, std::stoi(propertyValue));
-
-	if(propertyType == "float")
-		setValue<float>(instance, property, std::stof(propertyValue));
-
-	if (propertyType == "bool")
-		setValue<bool>(instance, property, propertyValue == "true");
+	if (property && !propertyType.empty())
+	{
+		if (xml_tokens.find(propertyType) != xml_tokens.end())
+		{
+			token = xml_tokens[propertyType];
+			switch (token)
+			{
+			case 0: /* vector3 */
+			{
+				setValue<Vector3>(instance, property, readVector3(node));
+				break;
+			}
+			case 1:
+			case 2: /* cframe */
+			{
+				setValue<CoordinateFrame>(instance, property, readCFrame(node));
+				break;
+			}
+			case 3: /* color3 */
+			{
+				setValue<Color3>(instance, property, readColor3(node));
+				break;
+			}
+			case 4: /* string */
+			{
+				setValue<std::string>(instance, property, propertyValue);
+				break;
+			}
+			case 5:/* token */
+			case 6:/* int */
+			{
+				setValue<int>(instance, property, std::stoi(propertyValue));
+				break;
+			}
+			case 7: /* float */
+			{
+				setValue<float>(instance, property, std::stof(propertyValue));
+				break;
+			}
+			case 8: /* bool */
+			{
+				setValue<bool>(instance, property, propertyValue == "true");
+				break;
+			}
+			default: break;
+			}
+		}
+	}
 }
 
 void iteratePropertiesNode(rapidxml::xml_node<>* properties, RBX::Instance* instance)
@@ -115,33 +166,49 @@ void iteratePropertiesNode(rapidxml::xml_node<>* properties, RBX::Instance* inst
 	}
 }
 
-void iterateNode(rapidxml::xml_node<>* scanNode)
+RBX::Instance* readInstance(rapidxml::xml_node<>* instanceNode)
 {
-	for (rapidxml::xml_node<>* node = scanNode->first_node(); node; node = node->next_sibling())
+	RBX::Instance* inst = 0;
+	if (!strcmp(instanceNode->name(), "Item"))
 	{
-		if (!strcmp(node->name(), "Item"))
+		rapidxml::xml_attribute<>* classAttr = instanceNode->first_attribute("class");
+		if (classAttr)
 		{
-			rapidxml::xml_attribute<>* classAttr = node->first_attribute("class");
 			std::string className = classAttr->value();
-
-			RBX::Instance* inst = fromName(className.c_str());
+			inst = RBX::fromName(className);
 
 			if (inst)
 			{
-				rapidxml::xml_node<>* properties = node->first_node("Properties");
+				rapidxml::xml_node<>* properties = instanceNode->first_node("Properties");
 				if (properties)
 				{
 					iteratePropertiesNode(properties, inst);
 				}
-				inst->setParent(RBX::Workspace::singleton());
-				printf("Serializer::serialized '%s'\n", inst->getName().c_str());
 			}
+
 		}
-		iterateNode(node);
+	}
+	return inst;
+}
+
+void iterateNode(rapidxml::xml_node<>* scanNode, RBX::Instance* parent)
+{
+	for (rapidxml::xml_node<>* node = scanNode->first_node(); node; node = node->next_sibling())
+	{
+		RBX::Instance* read = readInstance(node);
+		if (read)
+		{
+			if (parent)
+			{
+				//RBX::StandardOut::print(RBX::MESSAGE_INFO, "iterateNode(), parent = '%s'", parent->getName().c_str());
+				read->setParent(parent);
+			}
+			iterateNode(node, read);
+		}
 	}
 }
 
-void RBX::Serializer::load(const std::string& fileName)
+void RBX::Serializer::load(std::string fileName)
 {
 	rapidxml::file<> file(fileName.c_str());
 
@@ -153,6 +220,6 @@ void RBX::Serializer::load(const std::string& fileName)
 	if (!checkTag())
 		return;
 
-	iterateNode(doc.first_node());
-
+	iterateNode(doc.first_node(), 0);
+	doc.clear();
 }

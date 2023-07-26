@@ -19,6 +19,7 @@ namespace RBX
 	private:
 
 		std::string name;
+		//std::string baseClassName;
 		std::string className;
 
 		Instance* parent;
@@ -44,7 +45,7 @@ namespace RBX
 		inline T* findFirstChildOfClass(std::string name)
 		{
 			Instance* child;
-			for (size_t i = 0; i < getChildren()->size(); i++)
+			for (unsigned int i = 0; i < getChildren()->size(); i++)
 			{
 				child = getChildren()->at(i);
 				if (child && child->getClassName() == name)
@@ -57,6 +58,8 @@ namespace RBX
 		std::string getName() { return name; }
 
 		void setClassName(std::string newClassName) { className = newClassName; }
+		//void setBaseClassName(std::string newBaseClassName) { baseClassName = newBaseClassName; }
+
 		void setClassName2(std::string newClassName) { }
 
 		bool getArchivable() { return archivable; }
@@ -68,6 +71,7 @@ namespace RBX
 		Instances* getChildren() { return children; }
 
 		std::string getClassName() { return className; }
+		//std::string getBaseClassName() { return baseClassName; }
 
 		void setParent(Instance* instance);
 		Instance* getParent();

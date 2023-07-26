@@ -30,7 +30,11 @@ void RBX::GameTool::update(RenderDevice* rd, UserInput* ui)
 		i = RBX::Mouse::getTarget();
 		if (dragged)
 		{
-			dragged->setPosition(lastPosition);
+			if (dragged->body && dragged->body->_body)
+			{
+				dragged->body->_body->setLinearVelocity(lastLinearVelocity);
+				dragged->body->_body->setAngularVelocity(lastAngularVelocity);
+			}
 			dragged = 0;
 		}
 		if (active)
@@ -50,6 +54,7 @@ void RBX::GameTool::update(RenderDevice* rd, UserInput* ui)
 		originrot = pv->getEulerRotation();
 		hit = RBX::Mouse::getHit();
 
+		if (!pv->body || (pv->body && !pv->body->_body)) return;
 		if (!isFinite(hit.x) || !isFinite(hit.y) || !isFinite(hit.z)) return;
 
 		hit.x = ceil(hit.x);
@@ -77,16 +82,31 @@ void RBX::GameTool::update(RenderDevice* rd, UserInput* ui)
 
 		if (ui->keyReleased(SDLK_t))
 		{
-			pv->setCFrame(pv->getCFrame() * Matrix3::fromEulerAnglesXYZ(0, 0, toRadians(90)));
+			//float g3dRot[12] = g3d2ode((pv->getCFrame() * Matrix3::fromEulerAnglesXYZ(0, 0, toRadians(90))).rotation);
+			//dGeomSetRotation(pv->body->geom[0], g3dRot);
 		}
 
 		if (ui->keyReleased(SDLK_r))
 		{
-			pv->setCFrame(pv->getCFrame() * Matrix3::fromEulerAnglesXYZ(0, toRadians(90), 0));
+			//float g3dRot[12] = g3d2ode((pv->getCFrame() * Matrix3::fromEulerAnglesXYZ(0, toRadians(90), 0)).rotation);
+			//dGeomSetRotation(pv->body->geom[0], g3dRot);
 		}
 
 		lastPosition = vec;
 		dragged = pv;
+
+		//lastLinVel = (dReal*)dBodyGetLinearVel(dragged->body->body);
+		//lastAngVel = (dReal*)dBodyGetAngularVel(dragged->body->body);
+
+		lastLinearVelocity = dragged->body->_body->getLinearVelocity();
+		lastAngularVelocity = dragged->body->_body->getAngularVelocity();
+
+		if (lastLinearVelocity != btVector3(0,0,0) &&
+			lastAngularVelocity != btVector3(0, 0, 0))
+		{
+			dragged->body->_body->setLinearVelocity(btVector3(0, 0, 0));
+			dragged->body->_body->setAngularVelocity(btVector3(0, 0, 0));
+		}
 
 		Rendering::cursor_custom = Texture::fromFile(GetFileInPath("/content/textures/GrabRotateCursor.png"));
 	}
@@ -101,7 +121,11 @@ void RBX::GameTool::deactivate()
 	if (dragged)
 	{
 		RBX::Selection::selection = 0;
-		dragged->setPosition(lastPosition);
+		if (dragged->body && dragged->body->_body)
+		{
+			dragged->body->_body->setLinearVelocity(lastLinearVelocity);
+			dragged->body->_body->setAngularVelocity(lastAngularVelocity);
+		}
 		dragged = 0;
 	}
 
