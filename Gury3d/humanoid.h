@@ -2,10 +2,9 @@
 #define HUMANOID_H
 
 #include "part.h"
-#include "welds.h"
+#include "snaps.h"
 
 #include <G3DAll.h>
-#include <ode/ode.h>
 
 namespace RBX
 {
@@ -24,12 +23,11 @@ namespace RBX
 		
 		WalkMode walkMode;
 
-		dMass humanoidMass;
+		bool jointsBuilt;
 
 	public:
 
-		RBX::PVInstance* humanoidRootPart;
-		RBX::PVInstance* humanoidHead;
+		RBX::PVInstance* humanoidRootPart, *humanoidHead;
 
 		float health;
 		float maxHealth;
@@ -43,14 +41,15 @@ namespace RBX
 			jmpPower = 30;
 			setClassName("Humanoid");
 			setName("Humanoid");
+			isSteppable = 1;
 		}
 
 		bool isGrounded();
 		bool isFalling();
 		bool isInAir();
-		bool isJoined() { RBX::Physics::Weld* w = humanoidRootPart->findFirstChildOfClass<RBX::Physics::Weld>("Weld"); return !(w->hasBeenCalledBroken && w->weldBroken()); }
+		bool isJoined();
 
-		bool checkHumanoidAttributes() { return (humanoidHead && humanoidRootPart && (humanoidRootPart->body && humanoidHead->body) && health > 0); }
+		bool checkHumanoidAttributes() { return (humanoidHead && humanoidRootPart && (humanoidRootPart->body && humanoidHead->body)); }
 
 		void balance();
 		void onDied();
@@ -64,7 +63,11 @@ namespace RBX
 		void setHumanoidAttributes();
 		void setWalkDirection(Vector3 walkDir);
 		void setJump();
-		void step();
+		void onStep();
+		RBX::PartInstance* getRightArm();
+		RBX::PartInstance* getLeftArm();
+		RBX::PartInstance* getRightLeg();
+		RBX::PartInstance* getLeftLeg();
 		virtual ~Humanoid() {}
 	};
 }

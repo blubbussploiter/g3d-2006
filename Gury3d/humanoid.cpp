@@ -2,10 +2,11 @@
 #include "rbxmath.h"
 
 #include "camera.h"
-#include "welds.h"
 
 #include "sounds.h"
 #include "ray.h"
+
+#include "jointservice.h"
 
 RBX::Sound* whoosh = RBX::Sound::fromFile(GetFileInPath("/content/sounds/button.wav"));
 RBX::Sound* uuhhh = RBX::Sound::fromFile(GetFileInPath("/content/sounds/uuhhh.wav"));
@@ -39,21 +40,25 @@ void RBX::Humanoid::correctHumanoidAttributes()
 
 bool RBX::Humanoid::isFalling()
 {
-    const dReal* lin;
+  //  const dReal* lin;
     if (!checkHumanoidAttributes())
         return 0;
-    lin = dBodyGetLinearVel(humanoidRootPart->body->body);
-
-    return !(lin[1] >= -0.1);
+  //  lin = dBodyGetLinearVel(humanoidRootPart->body->body);
+  //  return !(lin[1] >= -0.1);
 }
 
 bool RBX::Humanoid::isInAir()
 {
-    const dReal* lin;
+ //   const dReal* lin;
     if (!checkHumanoidAttributes())
         return 0;
-    lin = dBodyGetLinearVel(humanoidRootPart->body->body);
-    return (lin[1] > 0.1);
+  //  lin = dBodyGetLinearVel(humanoidRootPart->body->body);
+   // return (lin[1] > 0.1);
+}
+
+bool RBX::Humanoid::isJoined()
+{
+    return (checkHumanoidAttributes() && RBX::JointService::singleton()->areJointed(humanoidHead, humanoidRootPart));
 }
 
 bool RBX::Humanoid::occluding(RBX::PVInstance* p, Vector3 dir)
@@ -70,7 +75,7 @@ bool RBX::Humanoid::occluding(RBX::PVInstance* p, Vector3 dir)
     r1->setIgnoreList(new Instances{ p->getParent() });
     rt1 = r1->getPartFromRay();
 
-    return (rt1 && rt1->body && (rt1->body->touchedPV == p));
+    return (rt1 && rt1->body);
 }
 
 bool RBX::Humanoid::isGrounded()
@@ -87,10 +92,7 @@ bool RBX::Humanoid::isGrounded()
     r1->setIgnoreList(new Instances{ getParent() });
     rt1 = r1->getPartFromRay();
 
-    if (!rt1)
-        return 0;
-
-    if (isFalling() || isInAir())
+    if (!rt1 || isFalling() || isInAir())
         return 0;
 
     return (rt1 != 0);
@@ -124,7 +126,9 @@ void RBX::Humanoid::setJump()
     if (isGrounded() && !isFalling() && !isInAir())
     {
         bsls_steps->stop();
-        dBodySetLinearVel(humanoidRootPart->body->body, walkDirection.x*2, jmpPower / 2.5, walkDirection.z * 2);
+        humanoidRootPart->body->_body->setLinearVelocity(btVector3(0, jmpPower / 2.5f, 0));
+        whoosh->setStartPosition(1.2f);
+        whoosh->setVolume(0.1f);
         whoosh->play();
     }
 }
@@ -133,11 +137,9 @@ void RBX::Humanoid::balance()
 {
     PhysBody* body;
     body = humanoidRootPart->body;
-    if (body)
+    if (body) 
     {
-        dBodySetAngularVel(body->body, 0, 0, 0);
-        dBodySetForce(body->body, 0, 0, 0);
-        dBodySetTorque(body->body, 0, 0, 0);
+        //dBodySetAngularVel(body->body, 0, 0, 0);
     }
 
 }
@@ -151,68 +153,110 @@ void RBX::Humanoid::onDied()
     uuhhh->play();
 }
 
-void RBX::Humanoid::step()
+void RBX::Humanoid::onStep()
 {
+
     Vector3 orig;
     Vector3 pos;
     Vector3 wlk;
 
     CoordinateFrame _old, look;
 
-    if (!isJoined())
-       health = 0;
-     
-    if (health == 0)
+    if (!health)
         onDied();
+
+    if (!checkHumanoidAttributes())
+    {
+        correctHumanoidAttributes();
+    }
 
     if (checkHumanoidAttributes())
     {
         if (humanoidHead->getPosition().y < -200 && health > 0)
         {
-            health = 0;
+            onDied();
             getParent()->remove();
         }
         balance();
     }
 
+    if (!isJoined())
+    {
+        if (!jointsBuilt)
+        {
+            RBX::JointService::singleton()->manualBuild(humanoidRootPart, humanoidHead);
+            if(getRightLeg()) RBX::JointService::singleton()->manualBuild(humanoidRootPart, getRightLeg());
+           if(getLeftLeg()) RBX::JointService::singleton()->manualBuild(humanoidRootPart, getLeftLeg());
+            if(getRightArm()) RBX::JointService::singleton()->manualBuild(humanoidRootPart, getRightArm());
+            if(getLeftArm()) RBX::JointService::singleton()->manualBuild(humanoidRootPart, getLeftArm());
+            jointsBuilt = 1;
+        }
+        else
+        {
+            health = 0;
+        }
+    }
+
     switch (walkMode)
     {
-        case DIRECTION_MOVE:
+    case DIRECTION_MOVE:
+    {
+
+        if (!isGrounded())
         {
-
-            if (!checkHumanoidAttributes())
-            {
-                correctHumanoidAttributes();
-                return;
-            }
-
-            if (!isGrounded())
-                return;
-
-            orig = humanoidHead->getPosition();
-            _old = humanoidHead->getCFrame();
-            look = _old;
-
-            pos = orig + walkDirection;
-            look.lookAt(pos);
-
-            if (walkDirection != Vector3::zero())
-            {
-                wlk = lerp(_old.translation, pos, 0.65f);
-
-                if (!bsls_steps->isPlaying())
-                    bsls_steps->play();
-
-                humanoidHead->setCFrame(_old.lerp(look, RBX::Camera::singleton()->getLerp()));
-                humanoidHead->setPosition(wlk);
-
-            }
-            else
-                bsls_steps->stop();
-
-            break;
+            bsls_steps->stop();
+            return;
         }
-        default: break;
+
+        orig = humanoidHead->getPosition();
+        _old = humanoidHead->getCFrame();
+        look = _old;
+
+        pos = orig + walkDirection;
+        look.lookAt(pos);
+
+        if (walkDirection != Vector3::zero())
+        {
+            CoordinateFrame lerpd;
+            wlk = lerp(_old.translation, pos, 0.65f);
+
+            if (!bsls_steps->isPlaying())
+                bsls_steps->play();
+
+            lerpd = _old.lerp(look, RBX::Camera::singleton()->getLerp());
+           // humanoidRootPart->setCFrame(lerpd);
+
+            /*  walk code here: PLEASE someone. PLEASE just change this its SO ASS!!! */
+
+           // humanoidHead->setPosition(wlk);
+
+        }
+        else
+            bsls_steps->stop();
+
+        break;
     }
-    
+    default: break;
+    }
+
+}
+
+RBX::PartInstance* RBX::Humanoid::getRightArm()
+{
+    return static_cast<RBX::PartInstance*>(getParent()->findFirstChild("Right Arm"));
+}
+
+RBX::PartInstance* RBX::Humanoid::getLeftArm()
+{
+    return static_cast<RBX::PartInstance*>(getParent()->findFirstChild("Left Arm"));
+}
+
+RBX::PartInstance* RBX::Humanoid::getRightLeg()
+{
+    return static_cast<RBX::PartInstance*>(getParent()->findFirstChild("Right Leg"));
+}
+
+RBX::PartInstance* RBX::Humanoid::getLeftLeg()
+{
+    return static_cast<RBX::PartInstance*>(getParent()->findFirstChild("Left Leg"));
 }

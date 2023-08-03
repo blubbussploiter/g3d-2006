@@ -6,7 +6,6 @@
 
 namespace Rendering
 {
-	static TextureRef cursor_close, cursor_far;
 	extern TextureRef cursor_custom;
 	extern float szx, szy;
 	extern unsigned int mouse_glid;

@@ -70,10 +70,6 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)bin\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)obj\$(Configuration)\</IntDir>
-  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -92,18 +88,19 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;dDOUBLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)include;$(SolutionDir)fmod\inc;$(SolutionDir)fmod\studio;$(SolutionDir)ode;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\include;.\fmod\inc;.\fmod\studio;.\bullet;.\bullet\vectormathlibrary\include\vectormath\scalar\cpp\</AdditionalIncludeDirectories>
+      <LanguageStandard>Default</LanguageStandard>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)lib;</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>.\lib;fmod_vc.lib;fmodstudio_vc.lib;</AdditionalLibraryDirectories>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
-      <AdditionalDependencies>fmod_vc.lib;fmodstudio_vc.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -136,34 +133,51 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="backpack.h" />
+    <ClInclude Include="base64.h" />
     <ClInclude Include="brickcolor.h" />
+    <ClInclude Include="bthelp.h" />
     <ClInclude Include="camera.h" />
+    <ClInclude Include="classes.h" />
     <ClInclude Include="clonebin.h" />
+    <ClInclude Include="content.h" />
+    <ClInclude Include="crashreporter.h" />
+    <ClInclude Include="datamodel.h" />
     <ClInclude Include="decal.h" />
+    <ClInclude Include="enum.h" />
+    <ClInclude Include="extents.h" />
     <ClInclude Include="gametool.h" />
     <ClInclude Include="GuiRoot.h" />
+    <ClInclude Include="hinge.h" />
     <ClInclude Include="hopperbin.h" />
     <ClInclude Include="humanoid.h" />
     <ClInclude Include="instance.h" />
+    <ClInclude Include="joints.h" />
+    <ClInclude Include="jointservice.h" />
+    <ClInclude Include="keyboard.h" />
     <ClInclude Include="lighting.h" />
+    <ClInclude Include="log.h" />
+    <ClInclude Include="md5.h" />
     <ClInclude Include="mesh.h" />
     <ClInclude Include="model.h" />
+    <ClInclude Include="motor.h" />
     <ClInclude Include="Mouse.h" />
     <ClInclude Include="controller.h" />
+    <ClInclude Include="pvenums.h" />
     <ClInclude Include="part.h" />
     <ClInclude Include="players.h" />
     <ClInclude Include="property.h" />
     <ClInclude Include="ray.h" />
     <ClInclude Include="rbxmath.h" />
     <ClInclude Include="rbxwindow.h" />
-    <ClInclude Include="render_base.h" />
+    <ClInclude Include="rbx.h" />
     <ClInclude Include="render_shapes.h" />
+    <ClInclude Include="rightkeyboard.h" />
     <ClInclude Include="runservice.h" />
     <ClInclude Include="selection.h" />
-    <ClInclude Include="serializer.h" />
     <ClInclude Include="sounds.h" />
+    <ClInclude Include="stdout.h" />
     <ClInclude Include="strings.h" />
-    <ClInclude Include="welds.h" />
+    <ClInclude Include="snaps.h" />
     <ClInclude Include="workspace.h" />
   </ItemGroup>
   <ItemGroup>
@@ -172,9 +186,13 @@
     <ClCompile Include="brickcolor.cpp" />
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="camera_utils.cpp" />
+    <ClCompile Include="classes.cpp" />
     <ClCompile Include="clonebin.cpp" />
+    <ClCompile Include="content.cpp" />
     <ClCompile Include="controller.cpp" />
-    <ClCompile Include="cylinder.cpp" />
+    <ClCompile Include="crashreporter.cpp" />
+    <ClCompile Include="datamodel.cpp" />
+    <ClCompile Include="debugDrawer.cpp" />
     <ClCompile Include="decal.cpp" />
     <ClCompile Include="ExplNgine.cpp" />
     <ClCompile Include="gametool.cpp" />
@@ -190,11 +208,16 @@
     <ClCompile Include="humanoid.cpp" />
     <ClCompile Include="instance.cpp" />
     <ClCompile Include="iobfix.cpp" />
+    <ClCompile Include="jointservice.cpp" />
+    <ClCompile Include="keyboard.cpp" />
     <ClCompile Include="lighting.cpp" />
+    <ClCompile Include="log.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="md5.cpp" />
     <ClCompile Include="MenuBar.cpp" />
     <ClCompile Include="mesh.cpp" />
     <ClCompile Include="model.cpp" />
+    <ClCompile Include="motor.cpp" />
     <ClCompile Include="Mouse.cpp" />
     <ClCompile Include="CameraControlMenu.cpp" />
     <ClCompile Include="part.cpp" />
@@ -202,16 +225,19 @@
     <ClCompile Include="plr_controller.cpp" />
     <ClCompile Include="ray.cpp" />
     <ClCompile Include="rbxwindow.cpp" />
-    <ClCompile Include="render_base.cpp" />
+    <ClCompile Include="rbx.cpp" />
     <ClCompile Include="pvinstance.cpp" />
-    <ClCompile Include="ball.cpp" />
+    <ClCompile Include="primitives.cpp" />
+    <ClCompile Include="rightkeyboard.cpp" />
     <ClCompile Include="runservice.cpp" />
     <ClCompile Include="selection.cpp" />
     <ClCompile Include="serializer.cpp" />
+    <ClCompile Include="serializer.h" />
     <ClCompile Include="sound.cpp" />
     <ClCompile Include="sounds.cpp" />
+    <ClCompile Include="stdout.cpp" />
     <ClCompile Include="surfaces.cpp" />
-    <ClCompile Include="welds.cpp" />
+    <ClCompile Include="snaps.cpp" />
     <ClCompile Include="workspace.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

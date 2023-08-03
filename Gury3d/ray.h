@@ -18,6 +18,7 @@ namespace RBX
 			void addIgnore(RBX::Instance* i) { ignore->push_back(i); }
 			float getLastIntersectionTime() { return lastIntersectionTime; }
 			RBX::PVInstance* getPartFromRay();
+			Vector3 getNormalFromRay();
 			Ray(G3D::Ray r)
 			{
 				g3dRay = r;
@@ -29,5 +30,6 @@ namespace RBX
 				ignore = new RBX::Instances();
 			}
 		};
+		RBX::PVInstance* getPartFromG3DRay(G3D::Ray ray, RBX::Instances* ignore=0);
 	}
 }

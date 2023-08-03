@@ -1,17 +1,37 @@
 #include "controller.h"
 
-Movement::Controller* Movement::controller = 0;
+std::vector<RBX::Controller*> controllers = std::vector<RBX::Controller*>();
 
-void Movement::Controller::handleInput(UserInput* ui)
+void RBX::Controller::handleInput(UserInput* ui)
 {
+
 	if (ui->keyDown(SDLK_w))
+	{
 		direction = MovementDirections::Forward;
+	}
 	if (ui->keyDown(SDLK_s))
+	{
 		direction = MovementDirections::Backwards;
+	}
+
 	if (ui->keyDown(SDLK_a))
-		direction = MovementDirections::Left;
+	{
+		switch (direction)
+		{
+		case Forward: direction = ForwardLeft; break;
+		case Backwards: direction = BackwardsLeft; break;
+		default: {	direction = MovementDirections::Left; break; }
+		}
+	}
 	if (ui->keyDown(SDLK_d))
-		direction = MovementDirections::Right;
+	{
+		switch (direction)
+		{
+		case Forward: direction = ForwardRight; break;
+		case Backwards: direction = BackwardsRight; break;
+		default: {	direction = MovementDirections::Right; break; }
+		}
+	}
 	if (ui->keyPressed(SDLK_SPACE))
 		direction = MovementDirections::Jump;
 
@@ -29,12 +49,21 @@ void Movement::Controller::handleInput(UserInput* ui)
 		isMoving = true;
 }
 
-Movement::Controller* Movement::getCurrentController()
+void RBX::updateControllers(UserInput* ui)
 {
-	return controller;
+	for (unsigned int i = 0; i < controllers.size(); i++)
+	{
+		RBX::Controller* c = controllers.at(i);
+		if (c && !c->disabled())
+		{
+			c->handleInput(ui);
+			c->mv_update();
+			c->move();
+		}
+	}
 }
 
-void Movement::setCurrentController(Controller* c)
+void RBX::addController(Controller* c)
 {
-	controller = c;
+	controllers.push_back(c);
 }

@@ -1,6 +1,10 @@
 #include "mesh.h"
 #include "lighting.h"
 
+const Reflection::PropertyDescriptor<RBX::Render::Mesh, RBX::Render::MeshType> RBX::Render::Mesh::prop_meshType("MeshType", Reflection::Types::TYPE_Number, &RBX::Render::Mesh::getMeshType, &RBX::Render::Mesh::setMeshType, RBX::Render::Mesh::properties);
+const Reflection::PropertyDescriptor<RBX::Render::Mesh, Vector3> RBX::Render::Mesh::prop_meshScale("Scale", Reflection::Types::TYPE_Vector3, &RBX::Render::Mesh::getMeshScale, &RBX::Render::Mesh::setMeshScale, RBX::Render::Mesh::properties);
+const Reflection::PropertyDescriptor<RBX::Render::Mesh, RBX::Content> RBX::Render::Mesh::prop_meshId("MeshId", Reflection::Types::TYPE_Content, &RBX::Render::Mesh::getMeshId, &RBX::Render::Mesh::setMeshId, RBX::Render::Mesh::properties);
+
 void RBX::Render::Mesh::fromFile(std::string path)
 {
 	FILE* f = fopen(path.c_str(), "r");
@@ -8,7 +12,6 @@ void RBX::Render::Mesh::fromFile(std::string path)
 	float vx, vy, vz,
 		nx, ny, nz,
 		ux, uy, uz;
-
 
 	fscanf(f, "version 1.00\n");
 	fscanf(f, "%d\n", &faces);
@@ -29,13 +32,36 @@ void RBX::Render::Mesh::fromFile(std::string path)
 	}
 	
 	fclose(f);
+	meshId = Content(path);
+}
+
+void RBX::Render::Mesh::fromMeshType(MeshType types)
+{
+	setMeshType(types);
+}
+
+void RBX::Render::Mesh::setMeshId(Content meshId)
+{
+	std::string contentPath;
+
+	RBX::ContentProvider::singleton()->downloadContent(meshId, contentPath);
+
+	if (contentPath.empty()) return;
+
+	vertices.clear();
+	normals.clear();
+	uvs.clear();
+
+	fromFile(contentPath);
+
+	RBX::ContentProvider::singleton()->cleanupContent(meshId);
 }
 
 void RBX::Render::Mesh::renderDecals()
 {
 	RBX::Instances* children;
 	children = getParent()->getChildren();
-	for (size_t i = 0; i < children->size(); i++)
+	for (unsigned int i = 0; i < children->size(); i++)
 	{
 		RBX::Instance* child = children->at(i);
 		if (child->getClassName() == "Decal")
@@ -58,7 +84,7 @@ void RBX::Render::Mesh::render(RenderDevice* d)
 	parent = (RBX::PVInstance*)getParent();
 	cframe = parent->getCFrame();
 
-	RBX::Lighting::singleton()->begin(d, cframe.translation, 25);
+	RBX::Lighting::singleton()->begin(d, 25.0f);
 	d->setObjectToWorldMatrix(cframe);
 
 	renderFace(RBX::FRONT);
@@ -67,7 +93,7 @@ void RBX::Render::Mesh::render(RenderDevice* d)
 	RBX::Lighting::singleton()->end(d);
 }
 
-void RBX::Render::Mesh::renderFace(RBX::FACES face, bool isAlpha, bool isDrawingDecal)
+void RBX::Render::Mesh::renderFace(RBX::NormalId face, bool isAlpha, bool isDrawingDecal)
 {
 	RBX::PVInstance* parent;
 	Color3 color;
@@ -75,13 +101,10 @@ void RBX::Render::Mesh::renderFace(RBX::FACES face, bool isAlpha, bool isDrawing
 	float transparency;
 	float alpha = 1;
 
-	Vector3 scale;
-
 	parent = (RBX::PVInstance*)getParent();
 	color = parent->getColor();
 
 	transparency = parent->getTransparency();
-	scale = mesh_scale;
 
 	glEnable(GL_DEPTH_TEST);
 
@@ -101,10 +124,9 @@ void RBX::Render::Mesh::renderFace(RBX::FACES face, bool isAlpha, bool isDrawing
 
 	for (int i = 0; i < faces * 3; ++i) 
 	{
-		glNormal(normals[i] * scale);
-
+		glNormal(normals[i] * mesh_scale);
 		glTexCoord(uvs[i]);
-		glVertex(vertices[i] * scale);
+		glVertex(vertices[i] * mesh_scale);
 	}
 
 	glEnd();

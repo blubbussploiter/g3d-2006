@@ -11,7 +11,7 @@ bool RBX::Selection::canSelect = 0;
 void drawOutline(Vector3 from, Vector3 to, RenderDevice* rd, CoordinateFrame c)
 {
 	Color3 outline = Color3::cyan();
-	float offsetSize = 0.05F;
+	float offsetSize = 0.1F;
 
 	Draw::box(c.toWorldSpace(Box(Vector3(from.x - offsetSize, from.y + offsetSize, from.z + offsetSize), Vector3(to.x + offsetSize, from.y - offsetSize, from.z - offsetSize))), rd, outline, Color4::clear());
 	Draw::box(c.toWorldSpace(Box(Vector3(from.x - offsetSize, to.y + offsetSize, from.z + offsetSize), Vector3(to.x + offsetSize, to.y - offsetSize, from.z - offsetSize))), rd, outline, Color4::clear());
@@ -36,7 +36,7 @@ void RBX::Selection::renderSelection(RenderDevice* rd)
 	{
 		Vector3 size = selection->getSize();
 		Vector3 pos = selection->getPosition();
-		float div = 2, divY = 2.4f;
+		float div = 2.f, divY = 2.4f;
 		switch (selection->shape)
 		{
 			case part:
@@ -60,8 +60,6 @@ void RBX::Selection::update(UserInput* ui)
 {
 	RBX::PVInstance* target;
 	target = RBX::Mouse::target;
-
-	if (!RBX::RunService::singleton()->isRunning) return;
 
 	if (ui->keyPressed(SDL_LEFT_MOUSE_KEY)) clicked = 1;
 	if (ui->keyReleased(SDL_LEFT_MOUSE_KEY))

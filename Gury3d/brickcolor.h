@@ -8,6 +8,7 @@ namespace RBX
 	{
 	private:
 		int number;
+		Color3 color;
 	public:
 		Color3 getColor();
 		int getNumber() { return number; }

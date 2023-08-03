@@ -5,6 +5,7 @@
 
 #include "runservice.h"
 #include "sounds.h"
+
 #include "humanoid.h"
 
 void RBX::Network::PlayerController::mv_update()
@@ -15,6 +16,7 @@ void RBX::Network::PlayerController::mv_update()
 	RBX::Humanoid* h;
 
 	c = RBX::Network::Players::findLocalCharacter();
+
 	if (!c) return;
 	h = c->findFirstChildOfClass<RBX::Humanoid>("Humanoid");
 	if (!h) return;
@@ -56,7 +58,6 @@ void RBX::Network::PlayerController::mv_update()
 		h->setWalkDirection(Vector3::zero());
 	}
 
-	h->step();
 }
 
 void RBX::Network::PlayerController::move()
@@ -83,33 +84,57 @@ void RBX::Network::PlayerController::move()
 
 	switch (dir())
 	{
-	case Movement::Forward:
+	/* vertical */
+	case RBX::Forward:
 	{
 		mov = normalize(o.lookVector());
 		break;
 	}
-	case Movement::Backwards:
+	case RBX::Backwards:
 	{
 		mov = normalize(-o.lookVector());
 		break;
 	}
-	case Movement::Right:
+	/* horizontal */
+	case RBX::Right:
 	{
 		mov = normalize(o.rightVector());
 		break;
 	}
-	case Movement::Left:
+	case RBX::Left:
 	{
 		mov = normalize(-o.rightVector());
 		break;
 	}
-	case Movement::Jump:
+	/* vertical + horizontal.. */
+	case RBX::ForwardRight:
+	{
+		mov += o.getLookVector() + o.rightVector();
+		break;
+	}
+	case RBX::ForwardLeft:
+	{
+		mov += o.getLookVector() - o.rightVector();
+		break;
+	}
+	case RBX::BackwardsRight:
+	{
+		mov -= o.getLookVector() - o.rightVector();
+		break;
+	}
+	case RBX::BackwardsLeft:
+	{
+		mov -= o.getLookVector() + o.rightVector();
+		break;
+	}
+	/* super vertical */
+	case RBX::Jump:
 	{
 		humanoid->setJump();
-		setdir(Movement::Idle);
+		setdir(RBX::Idle);
 		return;
 	}
-	case Movement::Idle: { return; }
+	case RBX::Idle: { return; }
 	}
 
 	humanoid->setWalkDirection(mov);

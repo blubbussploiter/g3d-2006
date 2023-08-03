@@ -32,6 +32,7 @@ namespace RBX
 		bool isAffectedByPhysics;
 
 		bool isParentLocked;
+		bool isSteppable;
 
 		static Reflection::PropertyDescriptorContainer* properties;
 
@@ -40,11 +41,13 @@ namespace RBX
 		static Reflection::PropertyDescriptor<Instance, bool> prop_archivable;
 		static Reflection::PropertyDescriptor<Instance, Instance*> prop_parent;
 
+		bool isAncestorOf(RBX::Instance* i);
+
 		template<typename T>
 		inline T* findFirstChildOfClass(std::string name)
 		{
 			Instance* child;
-			for (size_t i = 0; i < getChildren()->size(); i++)
+			for (unsigned int i = 0; i < getChildren()->size(); i++)
 			{
 				child = getChildren()->at(i);
 				if (child && child->getClassName() == name)
@@ -57,13 +60,17 @@ namespace RBX
 		std::string getName() { return name; }
 
 		void setClassName(std::string newClassName) { className = newClassName; }
+
 		void setClassName2(std::string newClassName) { }
 
 		bool getArchivable() { return archivable; }
 		void setArchivable(bool narchivable) { archivable = narchivable; }
 
 		virtual Instance* clone() const { return new Instance(*this); }
-		virtual void remove();
+		void remove();
+
+		virtual void onRemove() {};
+		virtual void onStep() {};
 
 		Instances* getChildren() { return children; }
 

@@ -1,236 +1,178 @@
 /* (2023) Xplicit Ngine */
-/* probably made by whirlpool, mainly based off of https://github.com/Vulpovile/Blocks3D/blob/develop/src/source/XplicitNgine/XplicitNgine.cpp, especially removeBody (i do not know how to do ode or any bullshit like that so) */
 
+#include "jointservice.h"
 #include "runservice.h"
 #include "workspace.h"
+#include "stdout.h"
+#include "bthelp.h"
+#include "snaps.h"
 
-#define MAX_CONTACTS 4
+#pragma comment(lib, "/bullet/BulletCollision.lib")
+#pragma comment(lib, "/bullet/BulletDynamics.lib")
+#pragma comment(lib, "/bullet/LinearMath.lib")
 
-#pragma comment(lib, "ode.lib")
+void myTickCallback(btDynamicsWorld* dynamicsWorld, btScalar timeStep) {
 
-void collision(void* data, dGeomID o1, dGeomID o2)
-{
+	int numManifolds = dynamicsWorld->getDispatcher()->getNumManifolds();
 
-	int i;
+	for (int i = 0; i < numManifolds; i++) {
 
-	dBodyID b1 = dGeomGetBody(o1);
-	dBodyID b2 = dGeomGetBody(o2);
+		btPersistentManifold* contactManifold = dynamicsWorld->getDispatcher()->getManifoldByIndexInternal(i);
 
-	RBX::PVInstance* p1;
-	RBX::PVInstance* p2;
+		const btCollisionObject* objA = contactManifold->getBody0();
+		const btCollisionObject* objB = contactManifold->getBody1();
 
-	dContact contact[MAX_CONTACTS];
+		int numContacts = contactManifold->getNumContacts();
 
-	dWorldID world;
-	dJointGroupID group;
+		for (int j = 0; j < numContacts; j++) {
+			btManifoldPoint& pt = contactManifold->getContactPoint(j);
+			RBX::PVInstance* p0, * p1;
 
-	world = RBX::RunService::singleton()->getPhysics()->physWorld;
-	group = RBX::RunService::singleton()->getPhysics()->contactgroup;
+			p0 = (RBX::PVInstance*)objA->getUserPointer();
+			p1 = (RBX::PVInstance*)objB->getUserPointer();
 
-	if (b1 && b2 && dAreConnected(b1, b2)) return;
-
-	if (int numc = dCollide(o1, o2, MAX_CONTACTS, &contact[0].geom, sizeof(dContact)))
-	{
-		if (numc <= 0) return;
-		for (i = 0; i < numc; i++)
-		{
-
-			contact[i].surface.mode = dContactBounce | dContactSoftERP | dContactSoftCFM | dContactApprox1;
-
-			// Define contact surface properties
-			contact[i].surface.bounce = 0.5f; //Elasticity
-			contact[i].surface.mu = 0.4f; //Friction
-			contact[i].surface.slip1 = 0.0f;
-			contact[i].surface.slip2 = 0.0f;
-			contact[i].surface.soft_erp = 0.8f;
-			contact[i].surface.soft_cfm = 0.01f;
-
-			dJointID c = dJointCreateContact(world, group, contact + i);
-			dJointAttach(c, b1, b2);
-
-			if (b1)
+			if (p0 && p1 && p0->body && p1->body)
 			{
-
-				p1 = (RBX::PVInstance*)dGeomGetData(o1);
-				p2 = (RBX::PVInstance*)dGeomGetData(o2);
-
-				if (p1)
-				{
-					if (!p1->body->touchedPV && p2)
-						p1->body->touchedPV = p2;
-					else
-						p1->body->touchedPV = 0;
-				}
-				if (p2)
-				{
-					if (!p2->body->touchedPV && p1)
-						p2->body->touchedPV = p1;
-					else
-						p2->body->touchedPV = 0;
-				}
+				/* call :touched signal */
 			}
 		}
-
 	}
 }
 
 void RBX::XplicitNgine::createBody(RBX::PVInstance* part)
 {
-	if (part->body->body && part->body->geom[0])
-		return;
+	/* if not body, create body, else update it :) */
 
-	printf("creating body for '%s'\n", part->getName().c_str());
+	Vector3 size;
+	btVector3 bodyInertia;
 
-	Matrix3 g3dRot = part->getCFrame().rotation;
-	float rotation[12] = g3d2ode(g3dRot);
+	btTransform transform;
 
-	part->body->body = dBodyCreate(physWorld);
+	btDefaultMotionState* motionState;
+	btRigidBody::btRigidBodyConstructionInfo* bodyCI;
 
-	dMass mass;
-	mass.setBox(sqrt(part->getSize().x * 2),sqrt((part->getSize().y / 1.2) * 2),sqrt(part->getSize().z * 2), 0.7f);
-
-	part->body->mass = &mass;
-
-	dBodySetMass(part->body->body, &mass);
-	dBodySetData(part->body->body, part);
-
-	switch(part->shape)
+	if (part->body->_body)
 	{
-		case RBX::ball:
-		{
-			part->body->geom[0] = dCreateSphere(physSpace, part->getSize().y / 2);
-			break;
-		}
-		default:
-		{
-			part->body->geom[0] = dCreateBox(physSpace, part->getSize().x, part->getSize().y/1.2, part->getSize().z);
-			break;
-		}
+		updateBody(part);
+		return;
 	}
 
-	dBodySetLinearVel(part->body->body, 0, 0, 0);
+	size = part->getSize();
+	size.y *= getAffectedFormFactor(part);
+	size /= 2;
 
-	dBodySetPosition(part->body->body, part->getPosition().x, part->getPosition().y, part->getPosition().z);
-	dBodySetRotation(part->body->body, rotation);
+	switch (part->shape)
+	{
+	case RBX::ball:
+	{
+		part->body->_shape = new btSphereShape(part->getSize().y / 2);
+		break;
+	}
+	case RBX::cylinder:
+	{
+		part->body->_shape = new btCylinderShape(btVector3(size.x, size.y, size.z));
+		break;
+	}
+	default: 
+	{
+		part->body->_shape = new btBoxShape(g3Vector3(size));
+		break;
+	}
+	}
 
-	dGeomSetPosition(part->body->geom[0], part->getPosition().x, part->getPosition().y, part->getPosition().z);
-	dGeomSetRotation(part->body->geom[0], rotation);
+	transform = ToTransform(part->getCFrame());
+	motionState = new btDefaultMotionState(transform);
 
-	if(!part->getAnchored())
-		dGeomSetBody(part->body->geom[0], part->body->body);
+	part->body->_shape->calculateLocalInertia(BODY_MASS, bodyInertia);
 
-	dGeomSetData(part->body->geom[0], part);
+	bodyCI = new btRigidBody::btRigidBodyConstructionInfo(BODY_MASS, motionState, part->body->_shape, bodyInertia);
+
+	bodyCI->m_restitution = 0.0f;
+	bodyCI->m_friction = part->getFriction();
+
+	part->body->_body = new btRigidBody(*bodyCI);
+	part->body->_body->setUserPointer((void*)part);
+
+	part->body->_body->setCcdMotionThreshold(1e-7);
+	part->body->_body->setCcdSweptSphereRadius(1.0f);
+
+	if (!part->getAnchored())
+		_world->addRigidBody(part->body->_body);
+	else
+	{
+		part->body->_collider = new btCollisionObject();
+
+		part->body->_collider->setWorldTransform(transform);
+		part->body->_collider->setCollisionShape(part->body->_shape);
+
+		part->body->_collider->setUserPointer((void*)part);
+
+		_world->addCollisionObject(part->body->_collider);
+	}
+	
 }
 
 void RBX::XplicitNgine::removeBody(RBX::PVInstance* part)
 {
-	if (part->body->body != NULL)
+	if (part->body->_body)
 	{
-		dBodyEnable(part->body->body);
-		dGeomEnable(part->body->geom[0]);
-
-		if (part->getAnchored())
-		{
-			dGeomSetBody(part->body->geom[0], part->body->body);
-			dGeomEnable(part->body->geom[0]);
-			updateBody(part);
-			update();
-		}
-
-		/* future joints stuff 
-
-		for (int i = 0; i < dBodyGetNumJoints(part->body->body); i++) {
-			dBodyID b1 = dJointGetBody(dBodyGetJoint(part->body->body, i), 0);
-			dBodyID b2 = dJointGetBody(dBodyGetJoint(part->body->body, i), 1);
-
-			if (b1 != NULL)
-			{
-				dBodyEnable(b1);
-				PartInstance* part = (PartInstance*)dBodyGetData(b1);
-				if (part != NULL)
-					dGeomEnable(part->physGeom[0]);
-			}
-
-			if (b2 != NULL)
-			{
-				dBodyEnable(b2);
-				PartInstance* part = (PartInstance*)dBodyGetData(b2);
-				if (part != NULL)
-					dGeomEnable(part->physGeom[0]);
-			}
-			dJointDestroy(dBodyGetJoint(partInstance->physBody, i));
-		}
-
-		*/
-
-		dBodyDestroy(part->body->body);
-		dGeomDestroy(part->body->geom[0]);
-		part->body = NULL;
+		delete part->body->_body->getMotionState();
+		delete part->body->_body;
 	}
+
+	delete part->body->_shape;
+}
+
+void RBX::XplicitNgine::resetBody(RBX::PVInstance* part)
+{
+	removeBody(part);
+	createBody(part);
 }
 
 void RBX::XplicitNgine::updateBodyCFrame(CoordinateFrame cf, RBX::PVInstance* p)
 {
-	Matrix3 g3dRot = cf.rotation;
-	Vector3 g3dPos = cf.translation;
-
-	updateAnchor(p);
-
-	if (!p->body->body || !p->body->geom[0])
-		return;
-
-	float rotation[12] = { g3dRot[0][0], g3dRot[0][1], g3dRot[0][2], 0,
-					g3dRot[1][0], g3dRot[1][1], g3dRot[1][2], 0,
-					g3dRot[2][0], g3dRot[2][1], g3dRot[2][2], 0 };
-
-	dBodySetPosition(p->body->body,g3dPos.x, g3dPos.y, g3dPos.z);
-	dBodySetRotation(p->body->body, rotation);
-
-	dGeomSetPosition(p->body->geom[0], g3dPos.x, g3dPos.y, g3dPos.z);
-	dGeomSetRotation(p->body->geom[0], rotation);
+	if (!p->body->_body) return;
+	p->body->_body->setCenterOfMassTransform(ToTransform(cf));
 }
 
 void RBX::XplicitNgine::updateBody(RBX::PVInstance* part)
 {
-		
-	updateAnchor(part);
+	btTransform transform;
+	CoordinateFrame cframe;
 
-	if(!part->isAffectedByPhysics || !part->body->body)
-		return;
+	RBX::Joint* connector;
 
-	part->think();
+	if (!part->body->_body || 
+		(part->body->_body && !part->body->_body->isActive())) return;
 
-	const dReal* physPosition = dGeomGetPosition(part->body->geom[0]);
-	const dReal* physRotation = dGeomGetRotation(part->body->geom[0]);
+	connector = part->body->connector;
+	transform = part->body->_body->getWorldTransform();
 
-	part->setCFrameNoPhysics(CoordinateFrame(
-		Matrix3(physRotation[0], physRotation[1], physRotation[2],
-			physRotation[4], physRotation[5], physRotation[6],
-			physRotation[8], physRotation[9], physRotation[10]),
-		Vector3(physPosition[0], physPosition[1], physPosition[2])));
-}
+	/*
+	if (connector)
+	{
+		switch (connector->type)
+		{
+			case JointType::Snap:
+			{
+				RBX::SnapJoint* snap;
+				snap = (RBX::SnapJoint*)(connector);
+				transform = snap->getPartCompoundPosition(part);
+				break;
+			}
+			default: break;
+		}
+	}
+	*/
 
-void RBX::XplicitNgine::updateAnchor(RBX::PVInstance* part)
-{
-	if (!part->body->body || !part->body->geom[0]) return;
-	if (!part->getAnchored())
-		dGeomSetBody(part->body->geom[0], part->body->body);
-	else
-		dGeomSetBody(part->body->geom[0], 0);
-}
-
-void RBX::XplicitNgine::update()
-{
-	checkBodies(RBX::Workspace::singleton()->getChildren());
-	dJointGroupEmpty(contactgroup);
-	dSpaceCollide(physSpace, 0, &collision);
-	dWorldQuickStep(physWorld, 0.09998f);
+	cframe = ToCoordinateFrame(transform);
+	part->setCFrameNoPhysics(cframe);
 }
 
 void RBX::XplicitNgine::checkBodies(RBX::Instances* PVInstances)
 {
 	RBX::PVInstance* part;
-	for (size_t i = 0; i < PVInstances->size(); i++)
+	for (unsigned int i = 0; i < PVInstances->size(); i++)
 	{
 		part = (RBX::PVInstance*)PVInstances->at(i);
 
@@ -242,7 +184,34 @@ void RBX::XplicitNgine::checkBodies(RBX::Instances* PVInstances)
 	}
 }
 
+void RBX::XplicitNgine::updateAnchor(RBX::PVInstance* part)
+{
+
+}
+
+void RBX::XplicitNgine::update()
+{
+	_world->stepSimulation(0.025f);
+}
+
+void RBX::XplicitNgine::close()
+{
+	RBX::StandardOut::print(RBX::MESSAGE_INFO, "XplicitNgine::close()");
+	delete _world;
+	delete _solver;
+	delete _collisionConfiguration;
+	delete _dispatcher;
+	delete _broadphase;
+}
+
 void RBX::XplicitNgine::init()
 {
+	_world->setInternalTickCallback(myTickCallback);
 	checkBodies(RBX::Workspace::singleton()->getChildren());
+}
+
+bool RBX::XplicitNgine::areColliding(RBX::PVInstance* part1, RBX::PVInstance* part2)
+{
+	//return part1->body->_shape.;
+	return 1;
 }

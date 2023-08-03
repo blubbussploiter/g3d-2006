@@ -42,11 +42,10 @@ namespace RBX /* change this to RBX::Network (maybe) */
 			}
 		};
 
-		class PlayerController : public Movement::Controller
+		class PlayerController : public RBX::Controller
 		{
 		private:
 			Player* plr;
-			dMass mass;
 
 			float jmpPower;
 			float camYaw;
@@ -78,6 +77,8 @@ namespace RBX /* change this to RBX::Network (maybe) */
 
 			void loadCharacter();
 			void disposeActiveBin();
+
+			void setAsController();
 
 			Player()
 			{

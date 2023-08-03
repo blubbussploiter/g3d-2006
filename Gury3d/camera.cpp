@@ -1,9 +1,13 @@
 
 #include <thread>
+
+#include "workspace.h"
+#include "instance.h"
+
 #include "camera.h"
 #include "sounds.h"
 
-RBX::Camera* Csingleton;
+RBX::Camera* currentCamera;
 RenderDevice* RBX::Camera::rd = 0;
 
 POINT oldMouse;
@@ -11,27 +15,29 @@ POINT mouse;
 
 bool isInitialized;
 
+static RBX::Sound* switch3 = RBX::Sound::fromFile(GetFileInPath("/content/sounds/SWITCH3.wav"));
+
+//Reflection::PropertyDescriptor<RBX::Camera, CoordinateFrame> RBX::Camera::prop_cframe("CoordinateFrame", Reflection::Types::TYPE_CFrame, &RBX::Camera::getCoordinateFrame, &RBX::Camera::setCoordinateFrame, RBX::Camera::properties);
+
 void RBX::Camera::tiltUp(double deg, bool enactedByZoom)
 {
-    CoordinateFrame frame = CoordinateFrame(camera->getCoordinateFrame().rotation, camera->getCoordinateFrame().translation);
-    pan(&frame, 0, toRadians(deg), enactedByZoom, 0.09999988f);
-    setFrame(frame);
+    pan(&cframe, 0, toRadians(deg), 1, 0.41f);
+    if(!enactedByZoom) switch3->play();
 }
 
 void RBX::Camera::tiltDown(double deg, bool enactedByZoom)
 {
-    CoordinateFrame frame = CoordinateFrame(camera->getCoordinateFrame().rotation, camera->getCoordinateFrame().translation);
-    pan(&frame, 0, toRadians(-deg), enactedByZoom, 0.09999988f);
-    setFrame(frame);
+    pan(&cframe, 0, toRadians(-deg), 1, 0.41f);
+    if (!enactedByZoom) switch3->play();
 }
 
 void RBX::Camera::cam_zoom(bool inout)
 {
-    isInFirstPerson = (zoom <= 1.5f);
+    if(cameraType == Follow) isInFirstPerson = (zoom <= 1.5f);
 
     if (inout)
     {
-        Zoom(1.0);
+        Zoom(1);
         return;
     }
 
@@ -44,20 +50,18 @@ void RBX::Camera::update(Rendering::G3DApp* app)
     Vector3 pos;
 
     inpt = app->userInput;
-    focusPosition = cframe.lookVector();
+    //focusPosition = cframe.lookVector();
 
     if (cameraType == Follow)
     {
         if (focusPart)
-        {
             focusPosition = focusPart->getPosition();
-        }
     }
 
     if (isUsingRightMouse || isInFirstPerson)
     {
         GetCursorPos(&mouse);
-        pan(&cframe, (mouse.x - oldMouse.x) / 100.f, (mouse.y - oldMouse.y) / 100.f, 1);
+        pan(&cframe, (mouse.x - oldMouse.x) / 100.f, (mouse.y - oldMouse.y) / 100.f, 1, 0.41f);
         SetCursorPos(oldMouse.x, oldMouse.y);
     }
 
@@ -70,8 +74,7 @@ void RBX::Camera::update(Rendering::G3DApp* app)
 
     GetCursorPos(&oldMouse);
 
-    if(!isInFirstPerson)
-        Camera::singleton()->pan(&cframe, 0, 0);
+    Camera::singleton()->pan(&cframe, 0, 0, 1, 0.41f);
     camera->setCoordinateFrame(cframe);
 }
 
@@ -80,50 +83,77 @@ void RBX::Camera::move()
     if (!moving())
         return;
 
-    CoordinateFrame _cf;
-    _cf = cframe;
-
     switch (dir())
     {
-        case Movement::Forward:
+        case RBX::Forward:
         {
-            _cf.translation += _cf.lookVector() * getSpeed();
+            cframe.translation += cframe.lookVector() * getSpeed();
             break;
         }
-        case Movement::Backwards:
+        case RBX::Backwards:
         {
-            _cf.translation -= _cf.lookVector() * getSpeed();
+            cframe.translation -= cframe.lookVector() * getSpeed();
             break;
         }
-        case Movement::Right:
+        case RBX::Right:
         {
-            _cf.translation += _cf.rightVector() * getSpeed();
+            cframe.translation += cframe.rightVector() * getSpeed();
             break;
         }
-        case Movement::Left:
+        case RBX::Left:
         {
-            _cf.translation -= _cf.rightVector() * getSpeed();
+            cframe.translation -= cframe.rightVector() * getSpeed();
             break;
         }
     }
 
-    setFrame(_cf);
-    Camera::singleton()->pan(&cframe, 0, 0, 1);
+    setFrame(cframe);
+}
+
+void RBX::Camera::zoomExtents()
+{
+    zoomExtents(RBX::Workspace::singleton()->getGameExtents());
+}
+
+void RBX::Camera::zoomExtents(RBX::Extents extents)
+{
+    Extents worldExtents;
+    CoordinateFrame coordFrame, extentsFrame;
+    Vector3 low, high, pos, size;
+
+    worldExtents = extents.toWorldSpace(Vector3::zero());
+    coordFrame = getCoordinateFrame();
+
+    low = worldExtents.low;
+    high = worldExtents.high;
+
+    size = high - low;
+    size /= 4;
+
+    pos = (coordFrame.translation + size);
+    pos.x = -pos.x;
+    pos.z = -pos.z;
+    
+    extentsFrame = CoordinateFrame(coordFrame.rotation, pos / 2);
+
+    setFrame(extentsFrame);
+    lookAt(worldExtents.getCenter());
 }
 
 void RBX::Camera::cameraInit(GCamera* __camera, RenderDevice* d)
 {
-    if (Csingleton)
+    if (currentCamera)
         return;
 
     rd = d;
 
-    Csingleton = new RBX::Camera();
-    Csingleton->setCamera(__camera);
+    currentCamera = new RBX::Camera();
+    currentCamera->setCamera(__camera);
 }
 
 /* same as `workspace.CurrentCamera` */
+
 RBX::Camera* RBX::Camera::singleton()
 {
-    return Csingleton;
+    return currentCamera;
 }

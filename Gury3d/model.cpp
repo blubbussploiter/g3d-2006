@@ -1,12 +1,66 @@
 #include "model.h"
 #include "runservice.h"
+#include "jointservice.h"
 #include "workspace.h"
-#include "welds.h"
+#include "stdout.h"
+
+#include "rightkeyboard.h"
+
+const Reflection::PropertyDescriptor<RBX::ModelInstance, RBX::ControllerTypes> RBX::ModelInstance::prop_controllerType("Controller", Reflection::Types::TYPE_Number, &RBX::ModelInstance::getController, &RBX::ModelInstance::setController, RBX::ModelInstance::properties);
+
+void RBX::ModelInstance::createController()
+{
+	RBX::Instances* children;
+	children = getChildren();
+	for (unsigned int i = 0; i < children->size(); i++)
+	{
+		RBX::Instance* child;
+		child = children->at(i);
+		if (child->getClassName() == "Model")
+		{
+			static_cast<RBX::ModelInstance*>(child)->makeController();
+		}
+	}
+	makeController();
+}
+
+void RBX::ModelInstance::makeController()
+{
+	if (controller) return;
+	switch (controllerType)
+	{
+		case KeyboardRight:
+		{
+			RightKeyboardController* rkc = new RightKeyboardController();
+			rkc->bindCharacter(this);
+			controller = rkc;
+			break;
+		}
+		case KeyboardLeft:
+		{
+			KeyboardController* lkc = new KeyboardController();
+			lkc->bindCharacter(this);
+			controller = lkc;
+			break;
+		}
+		default: return;
+	}
+
+	RBX::StandardOut::print(RBX::MESSAGE_INFO, "Created Controller 0x%08X for '%s'", controller, getName().c_str());
+	RBX::addController(controller);
+}
+
+void RBX::ModelInstance::setController(int c)
+{
+	controllerType = (ControllerTypes)c;
+}
+
+/* positional things */
 
 void RBX::ModelInstance::move(Vector3 vect)
 {
 	RBX::Instance* child;
-	for (size_t i = 0; i < getChildren()->size(); i++)
+	for (unsigned int i = 0; i < getChildren()->size(); i++)
 	{
 		child = getChildren()->at(i);
 		if (child && child->getClassName() == "PVInstance")
@@ -20,7 +74,7 @@ void RBX::ModelInstance::move(Vector3 vect)
 void RBX::ModelInstance::rotate(Vector3 rot)
 {
 	RBX::Instance* child;
-	for (size_t i = 0; i < getChildren()->size(); i++)
+	for (unsigned int i = 0; i < getChildren()->size(); i++)
 	{
 		child = getChildren()->at(i);
 		if (child && child->getClassName() == "PVInstance")
@@ -34,7 +88,7 @@ void RBX::ModelInstance::rotate(Vector3 rot)
 void RBX::ModelInstance::lookAt(Vector3 vect)
 {
 	RBX::Instance* child;
-	for (size_t i = 0; i < getChildren()->size(); i++)
+	for (unsigned int i = 0; i < getChildren()->size(); i++)
 	{
 		child = getChildren()->at(i);
 		if (child && child->getClassName() == "PVInstance")
@@ -45,19 +99,52 @@ void RBX::ModelInstance::lookAt(Vector3 vect)
 	}
 }
 
-void RBX::ModelInstance::breakJoints()
+
+RBX::PartInstance* RBX::ModelInstance::getPrimaryPartInternal()
 {
-	RBX::Instances* pvs = new RBX::Instances();
-	RBX::Workspace::singleton()->getPVInstances(getChildren(), pvs);
-	for (size_t i = 0; i < pvs->size(); i++)
+	RBX::PartInstance* result = 0;
+	RBX::Instances* children = new Instances();
+
+	float lastArea = -1;
+	RBX::getPVInstances(getChildren(), children);
+
+	for (unsigned int i = 0; i < children->size(); i++)
 	{
-		for (size_t o = 0; o < pvs->at(i)->getChildren()->size(); o++)
+		RBX::PartInstance* pv = (RBX::PartInstance*)(children->at(i));
+		RBX::Extents extents = pv->getWorldExtents();
+		float area = extents.area();
+		if (area > lastArea)
 		{
-			RBX::Physics::Weld* w = static_cast<RBX::Physics::Weld*>(pvs->at(i)->getChildren()->at(o));
-			if (w && w->getClassName() == "Weld")
-			{
-				w->remove();
-			}
+			lastArea = area;
+			result = pv;
 		}
 	}
+	children->clear();
+	delete children;
+	return result;
+}
+
+/* joints */
+
+void RBX::ModelInstance::buildJoints()
+{
+	RBX::Instances* children;
+	if (!primaryPart) primaryPart = getPrimaryPartInternal();
+	children = getChildren();
+	for (unsigned int i = 0; i < children->size(); i++)
+	{
+		RBX::Instance* child;
+		child = children->at(i);
+		if (child->getClassName() == "Model")
+		{
+			static_cast<RBX::ModelInstance*>(child)->buildJoints();
+		}
+	}
+	RBX::StandardOut::print(RBX::MESSAGE_INFO, "ModelInstance::buildJoints(), building joints for '%s', joints to build : %d", getName().c_str(), children->size());
+	RBX::JointService::singleton()->buildJoints(this);
+}
+
+void RBX::ModelInstance::breakJoints()
+{
+	/* update for jointservice */
 }

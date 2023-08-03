@@ -1,10 +1,10 @@
 #include "GuiRoot.h"
-#include "render_base.h"
+#include "rbx.h"
 
 #include "rbxwindow.h"
 
 bool inFullScreen = 0;
-static int x, y, width, height;
+int x, y, width, height;
 
 void RBX::Gui::MenuBar::onExitBtnClick(RBX::Gui::GuiButton* btn)
 {

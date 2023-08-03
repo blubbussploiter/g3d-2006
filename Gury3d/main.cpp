@@ -1,14 +1,17 @@
-#include "render_base.h"
+#include "rbx.h"
+#include "crashreporter.h"
+#include "strings.h"
 
 int main()
 {
-	printf("guryblox version 2.1.0 beta\nby whirlpool\n");
+	RBX::CrashReporter::singleton()->start();
+
 	GAppSettings settings;
 
 	settings.window.width = 820;
 	settings.window.height = 480;
 	settings.window.resizable = true;
-	settings.dataDir = ".\\content\\";
+	settings.dataDir = ConFileInPath("\\content\\");
 
 	Rendering::G3DApp app(settings);
 

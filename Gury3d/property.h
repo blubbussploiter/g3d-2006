@@ -1,4 +1,7 @@
 
+#ifndef PROPERTY_H
+#define PROPERTY_H
+
 #include <string>
 #include <vector>
 
@@ -12,7 +15,9 @@ namespace Reflection
 		TYPE_Number,
 		TYPE_Bool,
 		TYPE_Vector3,
+		TYPE_Color3,
 		TYPE_CFrame,
+		TYPE_Content,
 		TYPE_Instance,
 		TYPE_Instances
 	};
@@ -87,6 +92,11 @@ namespace Reflection
 		};
 
 		template<typename Get, typename Set>
-		PropertyDescriptor(std::string name, Types t, Get get, Set set, PropertyDescriptorContainer* container) : Property(t, name), getset(new GetSetImpl<Get, Set>(get, set)) { container->push(this); }
+		PropertyDescriptor(std::string name, Types t, Get get, Set set, PropertyDescriptorContainer* container) : Property(t, name), getset(new GetSetImpl<Get, Set>(get, set))
+		{
+			container->push(this);
+		}
 	};
 }
+
+#endif

@@ -19,7 +19,13 @@ static std::string GetFileInPath(std::string file)
 	{
 		return name;
 	}
-	return std::string("");
+	return std::string();
+}
+
+static std::string ConFileInPath(std::string file)
+{
+	std::string name = ExePath() + file;
+	return name;
 }
 
 #endif

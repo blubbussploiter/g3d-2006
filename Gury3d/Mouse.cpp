@@ -17,7 +17,10 @@ Vector3 RBX::Mouse::hitWorld = Vector3::zero();
 RBX::PVInstance* RBX::Mouse::target = 0;
 TextureRef Rendering::cursor_custom = 0;
 
-float Rendering::szx = 100, Rendering::szy = 100;
+TextureRef cursor_far;
+TextureRef cursor_close;
+
+float Rendering::szx = 150, Rendering::szy = 150;
 
 void RBX::Mouse::update(float _x, float _y)
 {
@@ -25,25 +28,22 @@ void RBX::Mouse::update(float _x, float _y)
 	y = _y;
 }
 
-bool Rendering::shouldRenderAsFar() /* check distance later, new member, ->getClosestPoint for roblox ray */
+bool Rendering::shouldRenderAsFar() /* check distance later, new member, ->getClosestPoint for roblox ray */ /* FIX THIS */
 {
-	RBX::PVInstance* o = RBX::Mouse::getTarget();
-	if (isOverGuiObject) return 0;
-	return (o == 0);
+	//RBX::PVInstance* o = RBX::Mouse::getTarget();
+	//if (o)
+	//	printf("o = %s\n", o->getName().c_str());
+	//return (!o);
+	return 0;
 }
 
 RBX::PVInstance* RBX::Mouse::getTarget(RBX::PVInstance* ignorePart) /* ignore part for dragger tool */
 {
 	RBX::Camera* camera = RBX::Camera::singleton();
-	RBX::World::Ray* rbx_ray;
 	Ray ray;
 
 	ray = camera->camera->worldRay(x, y, camera->rd->getViewport());
-	rbx_ray = new RBX::World::Ray(ray);
-	rbx_ray->addIgnore(ignorePart);
-
-	target = rbx_ray->getPartFromRay();
-	hitWorld = ray.origin + (ray.direction * rbx_ray->nearest);
+	target = RBX::World::getPartFromG3DRay(ray);
 
 	return target;
 }
@@ -56,18 +56,18 @@ void Rendering::renderCursor(UserInput* ui, RenderDevice* rd)
 	mpos = ui->mouseXY();
 	sz = Vector2(szx, szy);
 
-	mpos.x -= sz.x/2;
-	mpos.y -= sz.y/2;
+	mpos.x -= sz.x /2;
+	mpos.y -= sz.y /2;
 
-	if (cursor_close.isNull())
-		cursor_close = Texture::fromFile(GetFileInPath("/content/textures/ArrowCursor.png"));
-
-	if (cursor_far.isNull())
+	if (cursor_far.isNull() && cursor_close.isNull())
+	{
 		cursor_far = Texture::fromFile(GetFileInPath("/content/textures/ArrowFarCursor.png"));
+		cursor_close = Texture::fromFile(GetFileInPath("/content/textures/ArrowCursor.png"));
+	}
 
-	if (!shouldRenderAsFar())
-		mouse_glid = cursor_close->openGLID();
-	else
+	mouse_glid = cursor_close->openGLID();
+
+	if (shouldRenderAsFar())
 		mouse_glid = cursor_far->openGLID();
 
 	if (!cursor_custom.isNull())
