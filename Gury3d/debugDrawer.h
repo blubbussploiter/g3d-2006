@@ -4,9 +4,8 @@
 #include <G3DAll.h>
 
 #include "bullet/LinearMath/btIDebugDraw.h"
+#include "pvinstance.h"
 #include "bthelp.h"
-#include "render_shapes.h"
-#include "GuiRoot.h"
 #include "rbx.h"
 
 class GLDebugDrawer : public btIDebugDraw

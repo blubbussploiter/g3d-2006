@@ -9,7 +9,7 @@ namespace RBX
 	class CloneBin : public RBX::HopperBin
 	{
 	public:
-		void update(RenderDevice* rd, UserInput* ui);
+		void update(RenderDevice* rd, G3D::UserInput* ui);
 		void deactivate();
 		void activate();
 		CloneBin()

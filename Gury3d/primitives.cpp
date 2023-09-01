@@ -1,7 +1,4 @@
-#include "render_shapes.h"
-
-#define FRONT_CROSS Color3::gray() * 0.7f
-#define BACK_CROSS  Color3::white()
+#include "pvinstance.h"
 
 void RBX::Primitives::drawLine(Vector2 pos, RenderDevice* d, Color3 color, float width, float height)
 {
@@ -43,42 +40,10 @@ void RBX::Primitives::rawCylinderAlongX(Color4 color, float radius, float axis)
 
 void RBX::Primitives::drawBall(RenderDevice* d, RBX::PVInstance* base)
 {
-    Draw::sphere(Sphere(Vector3(0, 0, 0), base->getSize().y / 2), d, base->color, Color4::clear());
+    Draw::sphere(Sphere(Vector3(0, 0, 0), base->getSize().y), d, base->color, Color4::clear());
 }
 
 void RBX::Primitives::drawCylinder(RenderDevice* d, RBX::PVInstance* base)
 {
-    Vector2 originX, originY;
-    float axis, radius, scale;
-
-    axis = base->getSize().y * getAffectedFormFactor(base);
-    radius = base->getSize().x / 2;
-
-    scale = radius * 0.1;
-    originX = Vector2(0, scale / 2);
-    originY = Vector2(scale / 2, 0);
-
-    glPushMatrix();
-
-    glRotatef(90.0, 0.0, 1.0, 0.0);
-
-    glTranslatef(0.0, 0.0, -axis * 0.5);
-    glTranslatef(0.0, 0.0, axis);
-
-    drawLine(originX, d, FRONT_CROSS, radius / 1.5f, -scale);
-    drawLine(originX, d, FRONT_CROSS, -radius / 1.5f, -scale);
-    drawLine(originY, d, FRONT_CROSS, -scale, radius / 1.5f);
-    drawLine(originY, d, FRONT_CROSS, -scale, -radius / 1.5f);
-
-    glRotatef(180.0, 0.0, 1.0, 0.0);
-    glTranslatef(0.0, 0.0, axis);
-
-    drawLine(originX, d, BACK_CROSS, radius / 1.5f, -scale);
-    drawLine(originX, d, BACK_CROSS, -radius / 1.5f, -scale);
-    drawLine(originY, d, BACK_CROSS, -scale, radius / 1.5f);
-    drawLine(originY, d, BACK_CROSS, -scale, -radius / 1.5f);
-
-    glPopMatrix();
-
-    rawCylinderAlongX(base->color, radius, axis);
+    rawCylinderAlongX(base->color, base->getSize().x, base->getSize().y);
 }

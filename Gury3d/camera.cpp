@@ -7,8 +7,7 @@
 #include "camera.h"
 #include "sounds.h"
 
-RBX::Camera* currentCamera;
-RenderDevice* RBX::Camera::rd = 0;
+#include "appmanager.h"
 
 POINT oldMouse;
 POINT mouse;
@@ -44,37 +43,32 @@ void RBX::Camera::cam_zoom(bool inout)
     Zoom(-1);
 }
 
-void RBX::Camera::update(Rendering::G3DApp* app)
+void RBX::Camera::update(UserInput* input)
 {
-    UserInput* inpt;
     Vector3 pos;
 
-    inpt = app->userInput;
-    //focusPosition = cframe.lookVector();
+    isUsingRightMouse = input->keyDown(SDL_RIGHT_MOUSE_KEY);
 
     if (cameraType == Follow)
     {
-        if (focusPart)
+        if (focusPart &&
+            focusPosition != focusPart->getPosition())
+        {
             focusPosition = focusPart->getPosition();
+        }
     }
 
-    if (isUsingRightMouse || isInFirstPerson)
+    if (isUsingRightMouse ||
+        isInFirstPerson)
     {
         GetCursorPos(&mouse);
         pan(&cframe, (mouse.x - oldMouse.x) / 100.f, (mouse.y - oldMouse.y) / 100.f, 1, 0.41f);
         SetCursorPos(oldMouse.x, oldMouse.y);
     }
 
-    if (inpt->keyDown(SDL_RIGHT_MOUSE_KEY))
-    {
-        isUsingRightMouse = true;
-    }
-    else
-        isUsingRightMouse = false;
-
     GetCursorPos(&oldMouse);
 
-    Camera::singleton()->pan(&cframe, 0, 0, 1, 0.41f);
+    pan(&cframe, 0, 0, 1, 0.41f);
     camera->setCoordinateFrame(cframe);
 }
 
@@ -140,20 +134,9 @@ void RBX::Camera::zoomExtents(RBX::Extents extents)
     lookAt(worldExtents.getCenter());
 }
 
-void RBX::Camera::cameraInit(GCamera* __camera, RenderDevice* d)
-{
-    if (currentCamera)
-        return;
-
-    rd = d;
-
-    currentCamera = new RBX::Camera();
-    currentCamera->setCamera(__camera);
-}
-
 /* same as `workspace.CurrentCamera` */
 
 RBX::Camera* RBX::Camera::singleton()
 {
-    return currentCamera;
+    return RBX::AppManager::singleton()->getApplication()->getCamera();
 }

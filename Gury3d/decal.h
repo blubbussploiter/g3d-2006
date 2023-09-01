@@ -13,16 +13,27 @@ namespace RBX
 {
 	class PVInstance;
 
+	namespace Render
+	{
+		void rawDecal(RenderDevice* d, RBX::PVInstance* pv, NormalId face, int texture, int sfactor, int dfactor);
+	}
+
 	class Decal : public RBX::Instance
 	{
 	private:
+
 		NormalId face;
 		Content tContent;
+
 		TextureRef texture;
+
+		std::string filePath;
+		Texture::InterpolateMode interpolateMode;
+		Texture::WrapMode wrapMode;
+
 		unsigned int openGLid;
 	public:
 		GLenum sfactor, dfactor;
-		Color4 decalColor;
 
 		float transparency;
 		bool isDefinedSurfaceDecal; /* whether its a hardcoded engine decal or user defined decal. (should be distilled by part color) */
@@ -41,16 +52,16 @@ namespace RBX
 
 		void fromFile(std::string file, Texture::WrapMode wrap = Texture::TILE, Texture::InterpolateMode interpolate=Texture::BILINEAR_NO_MIPMAP);
 		unsigned int getGLid() { if (!openGLid && !texture.isNull()) openGLid = texture->openGLID(); return openGLid; }
-		void render(PVInstance* p);
+		void render(RenderDevice* rd, PVInstance* p);
 		Decal() {
 			openGLid = 0; 
 			face = NormalId::TOP; 
 			sfactor = GL_SRC_ALPHA;
 			dfactor = GL_ONE_MINUS_SRC_ALPHA;
 			transparency = 0.f;
+			tContent = Content();
 			setClassName("Decal");
 			setName("Decal");
-			tContent = Content();
 		}
 		~Decal() { delete& texture; }
 	};

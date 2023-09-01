@@ -7,6 +7,7 @@
 #include "ray.h"
 
 #include "jointservice.h"
+#include "bthelp.h"
 
 RBX::Sound* whoosh = RBX::Sound::fromFile(GetFileInPath("/content/sounds/button.wav"));
 RBX::Sound* uuhhh = RBX::Sound::fromFile(GetFileInPath("/content/sounds/uuhhh.wav"));
@@ -38,22 +39,33 @@ void RBX::Humanoid::correctHumanoidAttributes()
     setHumanoidAttributes();
 }
 
+void RBX::Humanoid::buildJoints()
+{
+    if (!checkHumanoidAttributes())
+        correctHumanoidAttributes();
+    RBX::JointService::singleton()->manualBuild(humanoidRootPart, humanoidHead);
+    if (getRightLeg()) RBX::JointService::singleton()->manualBuild(humanoidRootPart, getRightLeg());
+    if (getLeftLeg()) RBX::JointService::singleton()->manualBuild(humanoidRootPart, getLeftLeg());
+    if (getRightArm()) RBX::JointService::singleton()->manualBuild(humanoidRootPart, getRightArm());
+    if (getLeftArm()) RBX::JointService::singleton()->manualBuild(humanoidRootPart, getLeftArm());
+}
+
 bool RBX::Humanoid::isFalling()
 {
-  //  const dReal* lin;
+    btVector3 lin;
     if (!checkHumanoidAttributes())
         return 0;
-  //  lin = dBodyGetLinearVel(humanoidRootPart->body->body);
-  //  return !(lin[1] >= -0.1);
+    lin = humanoidRootPart->body->_body->getLinearVelocity();
+    return !(lin.y() >= -0.1);
 }
 
 bool RBX::Humanoid::isInAir()
 {
- //   const dReal* lin;
+    btVector3 lin;
     if (!checkHumanoidAttributes())
         return 0;
-  //  lin = dBodyGetLinearVel(humanoidRootPart->body->body);
-   // return (lin[1] > 0.1);
+    lin = humanoidRootPart->body->_body->getLinearVelocity();
+    return (lin.y() > 0.1);
 }
 
 bool RBX::Humanoid::isJoined()
@@ -61,41 +73,16 @@ bool RBX::Humanoid::isJoined()
     return (checkHumanoidAttributes() && RBX::JointService::singleton()->areJointed(humanoidHead, humanoidRootPart));
 }
 
-bool RBX::Humanoid::occluding(RBX::PVInstance* p, Vector3 dir)
-{
-    RBX::PVInstance *rt1;
-    RBX::World::Ray* r1;
-
-    if (!checkHumanoidAttributes() || !p->body)
-        return 0;
-
-    r1 = new RBX::World::Ray(p->getPosition(),
-       dir);
-
-    r1->setIgnoreList(new Instances{ p->getParent() });
-    rt1 = r1->getPartFromRay();
-
-    return (rt1 && rt1->body);
-}
-
 bool RBX::Humanoid::isGrounded()
 {
-    RBX::PVInstance *rt1;
-    RBX::World::Ray* r1;
+    btVector3 btFrom, btTo;
+    btCollisionWorld::ClosestRayResultCallback res(btFrom, btTo);
 
-    if (!checkHumanoidAttributes())
-        return 0;
+    btFrom = g3Vector3(getRightLeg()->getPosition());
+    btTo = btVector3(btFrom.x(), -1000, btFrom.z());
 
-    r1 = new RBX::World::Ray(humanoidRootPart->getPosition(), 
-        -humanoidRootPart->getCFrame().upVector());
-
-    r1->setIgnoreList(new Instances{ getParent() });
-    rt1 = r1->getPartFromRay();
-
-    if (!rt1 || isFalling() || isInAir())
-        return 0;
-
-    return (rt1 != 0);
+    RBX::RunService::singleton()->getPhysics()->_world->rayTest(btFrom, btTo, res); 
+    return res.hasHit();
 }
 
 void RBX::Humanoid::setWalkDirection(Vector3 value)
@@ -126,9 +113,8 @@ void RBX::Humanoid::setJump()
     if (isGrounded() && !isFalling() && !isInAir())
     {
         bsls_steps->stop();
+        humanoidRootPart->body->_body->setActivationState(ACTIVE_TAG);
         humanoidRootPart->body->_body->setLinearVelocity(btVector3(0, jmpPower / 2.5f, 0));
-        whoosh->setStartPosition(1.2f);
-        whoosh->setVolume(0.1f);
         whoosh->play();
     }
 }
@@ -139,7 +125,7 @@ void RBX::Humanoid::balance()
     body = humanoidRootPart->body;
     if (body) 
     {
-        //dBodySetAngularVel(body->body, 0, 0, 0);
+
     }
 
 }
@@ -156,11 +142,10 @@ void RBX::Humanoid::onDied()
 void RBX::Humanoid::onStep()
 {
 
-    Vector3 orig;
-    Vector3 pos;
-    Vector3 wlk;
+    
 
     CoordinateFrame _old, look;
+    btVector3 linVel;
 
     if (!health)
         onDied();
@@ -172,72 +157,39 @@ void RBX::Humanoid::onStep()
 
     if (checkHumanoidAttributes())
     {
-        if (humanoidHead->getPosition().y < -200 && health > 0)
+        if (humanoidRootPart->body->_body)
         {
-            onDied();
-            getParent()->remove();
+            float y;
+            y = humanoidRootPart->body->_body->getCenterOfMassPosition().y();
+            if (y < -200)
+            {
+                onDied();
+                getParent()->remove();
+            }
         }
         balance();
     }
 
-    if (!isJoined())
+    if (!jointsBuilt && !isJoined())
     {
-        if (!jointsBuilt)
+        buildJoints();
+
+        if (humanoidRootPart->body->_body)
         {
-            RBX::JointService::singleton()->manualBuild(humanoidRootPart, humanoidHead);
-            if(getRightLeg()) RBX::JointService::singleton()->manualBuild(humanoidRootPart, getRightLeg());
-           if(getLeftLeg()) RBX::JointService::singleton()->manualBuild(humanoidRootPart, getLeftLeg());
-            if(getRightArm()) RBX::JointService::singleton()->manualBuild(humanoidRootPart, getRightArm());
-            if(getLeftArm()) RBX::JointService::singleton()->manualBuild(humanoidRootPart, getLeftArm());
-            jointsBuilt = 1;
+
+            humanoidRootPart->body->_body->setSleepingThresholds(0.0, 0.0);
+            humanoidRootPart->body->_body->setAngularFactor(0.0);
+
         }
-        else
-        {
-            health = 0;
-        }
+
+        jointsBuilt = 1;
     }
 
-    switch (walkMode)
+    if (!isJoined() && jointsBuilt)
     {
-    case DIRECTION_MOVE:
-    {
-
-        if (!isGrounded())
-        {
-            bsls_steps->stop();
-            return;
-        }
-
-        orig = humanoidHead->getPosition();
-        _old = humanoidHead->getCFrame();
-        look = _old;
-
-        pos = orig + walkDirection;
-        look.lookAt(pos);
-
-        if (walkDirection != Vector3::zero())
-        {
-            CoordinateFrame lerpd;
-            wlk = lerp(_old.translation, pos, 0.65f);
-
-            if (!bsls_steps->isPlaying())
-                bsls_steps->play();
-
-            lerpd = _old.lerp(look, RBX::Camera::singleton()->getLerp());
-           // humanoidRootPart->setCFrame(lerpd);
-
-            /*  walk code here: PLEASE someone. PLEASE just change this its SO ASS!!! */
-
-           // humanoidHead->setPosition(wlk);
-
-        }
-        else
-            bsls_steps->stop();
-
-        break;
+        health = 0;
     }
-    default: break;
-    }
+
 
 }
 

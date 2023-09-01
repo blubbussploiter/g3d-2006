@@ -1,39 +1,33 @@
-#include "lighting.h"
 
-RBX::Lighting* lighting;
+#include "rbx.h"
+#include "datamodel.h"
 
 const Reflection::PropertyDescriptor<RBX::Lighting, Color3>  RBX::Lighting::prop_spotLight("SpotLightV9", Reflection::Types::TYPE_Color3,&RBX::Lighting::getSpotLight, &RBX::Lighting::setSpotLight, RBX::Lighting::properties);
 const Reflection::PropertyDescriptor<RBX::Lighting, Color3>  RBX::Lighting::prop_topAmbient("TopAmbientV9", Reflection::Types::TYPE_Color3,&RBX::Lighting::getTopAmbient, &RBX::Lighting::setTopAmbient, RBX::Lighting::properties);
 const Reflection::PropertyDescriptor<RBX::Lighting, Color3>  RBX::Lighting::prop_bottomAmbient("BottomAmbientV9", Reflection::Types::TYPE_Color3,&RBX::Lighting::getBottomAmbient, &RBX::Lighting::setBottomAmbient, RBX::Lighting::properties);
+const Reflection::PropertyDescriptor<RBX::Lighting, std::string>  RBX::Lighting::prop_timeOfDay("TimeOfDay", Reflection::Types::TYPE_String,&RBX::Lighting::getTimeOfDay, &RBX::Lighting::setTimeOfDay, RBX::Lighting::properties);
+const Reflection::PropertyDescriptor<RBX::Lighting, float>  RBX::Lighting::prop_geoLatitude("GeographicLatitude", Reflection::Types::TYPE_Number,&RBX::Lighting::getGeoLatitude, &RBX::Lighting::setGeoLatitude, RBX::Lighting::properties);
 
 RBX::Lighting* RBX::Lighting::singleton()
 {
-    if (!lighting)
-        lighting = new Lighting();
-    return lighting;
+    return RBX::Datamodel::getDatamodel()->lighting;
 }
 
-void RBX::Lighting::begin(RenderDevice* device, float shininess)
+void RBX::Lighting::begin(RenderDevice* device)
 {
 
     LightingParameters lighting;
     Color3 ambientColor, dynamicTop, dynamicBottom;
-    Vector3 toLight;
     
     int num = 0;
 
     lighting = getParameters();
-    device->pushState();
 
     device->enableLighting();
 
     device->setSpecularCoefficient(0);
     device->setSpecularCoefficient(Color3::white());
-    device->setShininess(shininess);
-
-    toLight.x = -0.40000001f;
-    toLight.y = -1.0f;
-    toLight.z = 0.1f;
+    device->setShininess(50.0f);
 
     ambientColor = (bottom_ambient + top_ambient) / 2.0f;
 
@@ -45,14 +39,17 @@ void RBX::Lighting::begin(RenderDevice* device, float shininess)
 
     device->setLight(0, GLight::directional(lighting.lightDirection, spotLight_color * 0.8999999761581421f, 1, 0));
     device->setLight(1, GLight::directional(toLight, dynamicBottom, 0, 1));
-    device->setLight(2, GLight::directional(Vector3(lighting.trueMoonPosition.x, 1, lighting.trueMoonPosition.z), dynamicTop, 0, 1));
+    device->setLight(2, GLight::directional(lightDir2, dynamicTop, 0, 1));
     
 }
 
 void RBX::Lighting::end(RenderDevice* device)
 {
+    device->setLight(0, 0);
+    device->setLight(1, 0);
+    device->setLight(2, 0);
+
     device->disableLighting();
-    device->popState();
 }
 
 LightingParameters RBX::Lighting::getParameters()
@@ -62,9 +59,29 @@ LightingParameters RBX::Lighting::getParameters()
         params = new LightingParameters();
 
         params->setLatitude(latitude);
-        params->setTime(toSeconds(14, 0, PM));
-        params->lightDirection = params->trueSunPosition;
+        params->setTime(timeOfDay);
+
     }
 
     return *params;
+}
+
+GameTime RBX::Time::fromString(const char* c)
+{
+    int hour = 0, minute = 0, second = 0;
+
+    sscanf(c, "%d:%d:%d", &hour, &minute, &second);
+
+    return toSeconds(hour, minute, second, PM);
+}
+
+std::string RBX::Time::toString(int seconds)
+{
+    int hour, minute, second;
+
+    hour = seconds / 3600;
+    minute = seconds % (hour * 60);
+    second = (seconds % (hour * 3600)) - ((seconds % (hour * 60)) * 60);
+
+    return RBX::Format("%d:%d:%d", hour, minute, second);
 }

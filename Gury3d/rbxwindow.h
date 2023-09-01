@@ -1,6 +1,8 @@
 #include <G3DAll.h>
 
 extern LONG oldWndProc;
+extern void setFullScreen(bool s);
+
 extern LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 static void hook_mouse()

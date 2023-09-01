@@ -42,14 +42,31 @@ namespace RBX
 		void setdir(MovementDirections d) { direction = d; }
 		void disable(bool d) { isDisabled = d; }
 		bool disabled() { return isDisabled; }
-		virtual void handleInput(UserInput* ui);
+		virtual void handleInput(G3D::UserInput* ui);
 		virtual void move() {};
 		virtual void mv_update() {}
-		MovementDirections dir() {return direction;}
-		Controller() : speed(0.2f) {}
+		MovementDirections dir() { return direction; }
+		Controller() : speed(0.2f)
+		{
+			isMoving = 0;
+			isDisabled = 0;
+		}
 	};
 
-	void updateControllers(UserInput* ui);
-	void addController(Controller* c);
+	class ControllerService : public RBX::Instance
+	{
+	private:
+		std::vector<Controller*> controllers;
+	public:
+		void updateControllers(G3D::UserInput* ui);
+		void addController(Controller* c);
+		static ControllerService* singleton();
+		ControllerService()
+		{
+			setClassName("ControllerService");
+			setName("ControllerService");
+		}
+	};
+
 }
 #endif

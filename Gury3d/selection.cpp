@@ -36,7 +36,7 @@ void RBX::Selection::renderSelection(RenderDevice* rd)
 	{
 		Vector3 size = selection->getSize();
 		Vector3 pos = selection->getPosition();
-		float div = 2.f, divY = 2.4f;
+		float div = 2.f, divY = 2.2f;
 		switch (selection->shape)
 		{
 			case part:
@@ -59,7 +59,7 @@ void RBX::Selection::renderSelection(RenderDevice* rd)
 void RBX::Selection::update(UserInput* ui)
 {
 	RBX::PVInstance* target;
-	target = RBX::Mouse::target;
+	target = RBX::Mouse::getTarget();
 
 	if (ui->keyPressed(SDL_LEFT_MOUSE_KEY)) clicked = 1;
 	if (ui->keyReleased(SDL_LEFT_MOUSE_KEY))

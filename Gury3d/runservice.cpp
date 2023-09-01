@@ -1,10 +1,7 @@
 #include "stdout.h"
-#include "workspace.h"
-#include "jointservice.h"
-#include "runservice.h"
-#include "model.h"
 
-RBX::RunService* runService;
+#include "model.h"
+#include "datamodel.h"
 
 void RBX::RunService::run()
 {
@@ -19,38 +16,41 @@ void RBX::RunService::stop()
 
 void RBX::RunService::reset()
 {
-    RBX::Workspace::singleton()->wakeUpPVS();
-    RBX::Workspace::singleton()->update();
-    RBX::Workspace::singleton()->wakeUpModels();
+    RBX::Scene::singleton()->updatePhysicsObjects();
+    //RBX::Workspace::singleton()->wakeUpModels();
 }
 
 void RBX::RunService::update()
 {
-    if (!isRunning)
-        return;
-
-    physics->update();
+    for (int i = 0; i < 6; i++)
+    {
+        physics->update();
+    }
 }
 
 void RBX::RunService::heartbeat()
 {
-    update();
-    updateSteppers(Workspace::singleton()->getChildren());
+   update();
+   //updateSteppers();
 }
 
-void RBX::RunService::updateSteppers(RBX::Instances* steppers)
+void RBX::RunService::updateSteppers()
 {
     for (unsigned int i = 0; i < steppers->size(); i++)
     {
-        RBX::Instance* stepper = steppers->at(i);
-        if (stepper && stepper->isSteppable)
-            stepper->onStep();
-        updateSteppers(stepper->getChildren());
+        steppers->at(i)->onStep();
+    }
+}
+
+void RBX::RunService::workspaceOnDescendentAdded(RBX::Instance* descendent)
+{
+    if (descendent->isSteppable)
+    {
+        steppers->push_back(descendent);
     }
 }
 
 RBX::RunService* RBX::RunService::singleton()
 {
-    if (!runService) runService = new RunService();
-    return runService;
+    return RBX::Datamodel::getDatamodel()->runService;
 }

@@ -1,37 +1,12 @@
 #include "backpack.h"
 #include "GuiRoot.h"
 
-
-void RBX::Backpack::keypress(UserInput* ui)
+void RBX::Backpack::keypress(G3D::UserInput* ui)
 {
-	G3D::Array<uint16_t> keycodes{};
-	RBX::HopperBin* bin;
-	std::string keycode;
-	char first;
-	unsigned int index;
 
-	ui->pressedKeys(keycodes);
-	if (keycodes.size() > 0)
-	{
-		keycode = ui->keyCodeToString(keycodes.last());
-		first = keycode[0];
-
-		if (isdigit(first))
-		{
-			index = (first - '0');
-			if (index > getChildren()->size()) return;
-			bin = static_cast<HopperBin*>(getChildren()->at(index-1));
-
-			if (bin)
-			{
-				if (!items[bin]) return;
-				onClickFn(items[bin]);
-			}
-		}
-	}
 }
 
-void RBX::Backpack::updateGui(RenderDevice* rd, UserInput* ui)
+void RBX::Backpack::updateGui(RenderDevice* rd, G3D::UserInput* ui)
 {
 	for (unsigned int i = 0; i < getChildren()->size(); i++)
 	{

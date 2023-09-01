@@ -1,11 +1,11 @@
+#ifndef MODEL_H
+#define MODEL_H
 
-#include "render_shapes.h"
 #include "controller.h"
 #include "part.h"
 
 namespace RBX
 {
-
 	class ModelInstance : public RBX::Instance
 	{
 	private:
@@ -28,6 +28,7 @@ namespace RBX
 		void makeController(); /* non recursive */
 
 		void setController(int c);
+		void setPrimaryPartCFrame(CoordinateFrame cframe);
 
 		ControllerTypes getController() { return controllerType; }
 		RBX::PartInstance* getPrimaryPartInternal();
@@ -58,3 +59,5 @@ namespace RBX
 		}
 	}
 }
+
+#endif

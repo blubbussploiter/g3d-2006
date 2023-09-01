@@ -1,5 +1,5 @@
 #include "stdout.h"
-#include "render_shapes.h"
+#include "pvinstance.h"
 #include "motor.h"
 
 void RBX::MotorJoint::createJoint()
@@ -14,6 +14,8 @@ void RBX::MotorJoint::createJoint()
 
 	bc0 = part0->body->_body->getWorldTransform().inverse();
 	bc1 = part1->body->_body->getWorldTransform().inverse();
+
+	isCreated = 1;
 
 	btGeneric6DofConstraint* motorConstraint = new btGeneric6DofConstraint(*part0->body->_body, *part1->body->_body, bc0, bc1, 0);
 

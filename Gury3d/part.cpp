@@ -1,5 +1,5 @@
 
-#include "render_shapes.h"
+#include "pvinstance.h"
 #include "lighting.h"
 #include "part.h"
 #include "mesh.h"
@@ -15,16 +15,13 @@ float getRadius(Vector3 v)
 
 void RBX::PartInstance::render(RenderDevice* rd)
 {
-	RBX::Render::Mesh* mesh = findFirstChildOfClass<RBX::Render::Mesh>("SpecialMesh");
-
-	if(color != brickColor->getColor())
-		color = brickColor->getColor();
-
-	if (mesh)
+	if (!specialShape)
 	{
-		mesh->render(rd);
-		return;
+		PVInstance::render(rd);
 	}
-
-	PVInstance::render(rd);
+	else
+	{
+		rd->setObjectToWorldMatrix(cframe);
+		specialShape->render(rd);
+	}
 }

@@ -4,30 +4,35 @@
 #include <G3DAll.h>
 #include <vector>
 
-#include "render_shapes.h"
+#include "camera.h"
+
+#include "extents.h"
+#include "view.h"
 
 namespace RBX
 {
+
 	class Workspace : public RBX::Instance
 	{
 	private:
-		Instances pvs;
+		Camera* currentCamera;
 	public:
 		/* deprecated, use Datamodel->workspace */
+
 		static Workspace* singleton();
 		Extents getGameExtents();
-		Instances* getPvs();
+
 		void wakeUpModels();
-		void wakeUpPVS();
-		void renderPVInstances(RenderDevice* d, bool renderOpaque);
-		void removePV(RBX::PVInstance* pv);
-		void render(RenderDevice* d);
-		void update();
+		void onDescendentAdded(RBX::Instance* descendent);
+
+		Camera* getCurrentCamera();
+		void setCurrentCamera(Camera* camera);
+
 		Workspace() 
 		{
-			pvs = Instances();
 			setName("PVWorkspace"); 
 			setClassName("PVWorkspace");
+
 			isParentLocked = 1; 
 		}
 	};

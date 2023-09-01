@@ -53,10 +53,9 @@ namespace RBX
 
 		void balance();
 		void onDied();
-		bool occluding(RBX::PVInstance* p, Vector3 dir);
 		/* corrects humanoidRootPart and humanoidHead */
 		void correctHumanoidAttributes();
-		void correctOccludingSlope();
+		void buildJoints();
 		/* get Humanoid from model if its a character (has humanoid) */
 		static Humanoid* modelIsCharacter(RBX::Instance* testModel);
 		/* sets humanoidRootPart and humanoidHead accordingly */

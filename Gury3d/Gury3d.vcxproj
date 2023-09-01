@@ -38,6 +38,7 @@
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
+    <UseOfMfc>Dynamic</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -90,17 +91,19 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>.\include;.\fmod\inc;.\fmod\studio;.\bullet;.\bullet\vectormathlibrary\include\vectormath\scalar\cpp\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\studio;.\include;.\fmod\inc;.\fmod\studio;.\bullet;.\bullet\vectormathlibrary\include\vectormath\scalar\cpp\</AdditionalIncludeDirectories>
       <LanguageStandard>Default</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <ShowIncludes>false</ShowIncludes>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>.\lib;fmod_vc.lib;fmodstudio_vc.lib;</AdditionalLibraryDirectories>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <AdditionalDependencies>Advapi32.lib;</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -132,17 +135,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="application.h" />
+    <ClInclude Include="appmanager.h" />
     <ClInclude Include="backpack.h" />
     <ClInclude Include="base64.h" />
     <ClInclude Include="brickcolor.h" />
     <ClInclude Include="bthelp.h" />
     <ClInclude Include="camera.h" />
+    <ClInclude Include="CExplorer.h" />
     <ClInclude Include="classes.h" />
     <ClInclude Include="clonebin.h" />
     <ClInclude Include="content.h" />
     <ClInclude Include="crashreporter.h" />
     <ClInclude Include="datamodel.h" />
     <ClInclude Include="decal.h" />
+    <ClInclude Include="documentManager.h" />
     <ClInclude Include="enum.h" />
     <ClInclude Include="extents.h" />
     <ClInclude Include="gametool.h" />
@@ -170,22 +177,38 @@
     <ClInclude Include="rbxmath.h" />
     <ClInclude Include="rbxwindow.h" />
     <ClInclude Include="rbx.h" />
-    <ClInclude Include="render_shapes.h" />
+    <ClInclude Include="render.h" />
+    <ClInclude Include="pvinstance.h" />
     <ClInclude Include="rightkeyboard.h" />
     <ClInclude Include="runservice.h" />
+    <ClInclude Include="scene.h" />
     <ClInclude Include="selection.h" />
+    <ClInclude Include="signal.h" />
     <ClInclude Include="sounds.h" />
     <ClInclude Include="stdout.h" />
     <ClInclude Include="strings.h" />
     <ClInclude Include="snaps.h" />
+    <ClInclude Include="studio\3DStudio.h" />
+    <ClInclude Include="studio\3DStudioDoc.h" />
+    <ClInclude Include="studio\3DStudioView.h" />
+    <ClInclude Include="studio\ChildFrm.h" />
+    <ClInclude Include="studio\framework.h" />
+    <ClInclude Include="studio\MainFrm.h" />
+    <ClInclude Include="studio\Resource.h" />
+    <ClInclude Include="studio\targetver.h" />
+    <ClInclude Include="view.h" />
     <ClInclude Include="workspace.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="application.cpp" />
+    <ClCompile Include="appmanager.cpp" />
+    <ClCompile Include="appSteps.cpp" />
     <ClCompile Include="backpack.cpp" />
     <ClCompile Include="backpackItem.cpp" />
     <ClCompile Include="brickcolor.cpp" />
     <ClCompile Include="camera.cpp" />
     <ClCompile Include="camera_utils.cpp" />
+    <ClCompile Include="CExplorer.cpp" />
     <ClCompile Include="classes.cpp" />
     <ClCompile Include="clonebin.cpp" />
     <ClCompile Include="content.cpp" />
@@ -205,6 +228,7 @@
     <ClCompile Include="GuiList.cpp" />
     <ClCompile Include="GuiMessage.cpp" />
     <ClCompile Include="GuiRoot.cpp" />
+    <ClCompile Include="poll.cpp" />
     <ClCompile Include="humanoid.cpp" />
     <ClCompile Include="instance.cpp" />
     <ClCompile Include="iobfix.cpp" />
@@ -224,21 +248,42 @@
     <ClCompile Include="players.cpp" />
     <ClCompile Include="plr_controller.cpp" />
     <ClCompile Include="ray.cpp" />
-    <ClCompile Include="rbxwindow.cpp" />
-    <ClCompile Include="rbx.cpp" />
     <ClCompile Include="pvinstance.cpp" />
     <ClCompile Include="primitives.cpp" />
     <ClCompile Include="rightkeyboard.cpp" />
     <ClCompile Include="runservice.cpp" />
+    <ClCompile Include="scene.cpp" />
     <ClCompile Include="selection.cpp" />
     <ClCompile Include="serializer.cpp" />
     <ClCompile Include="serializer.h" />
     <ClCompile Include="sound.cpp" />
     <ClCompile Include="sounds.cpp" />
     <ClCompile Include="stdout.cpp" />
+    <ClCompile Include="studio\3DStudio.cpp" />
+    <ClCompile Include="studio\3DStudioDoc.cpp" />
+    <ClCompile Include="studio\3DStudioView.cpp" />
+    <ClCompile Include="studio\ChildFrm.cpp" />
+    <ClCompile Include="studio\MainFrm.cpp" />
     <ClCompile Include="surfaces.cpp" />
     <ClCompile Include="snaps.cpp" />
+    <ClCompile Include="view.cpp" />
     <ClCompile Include="workspace.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\3DStudio.ico" />
+    <Image Include="res\3DStudioDoc.ico" />
+    <Image Include="studio\res\class_vi.bmp" />
+    <Image Include="studio\res\Gury.ico" />
+    <Image Include="studio\res\runservice.bmp" />
+    <Image Include="studio\res\Toolbar.bmp" />
+    <Image Include="studio\res\ToolbarRunService.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\My3DStudio.rc2" />
+    <None Include="studio\res\rbxplore.bin" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="studio\My3DStudio.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

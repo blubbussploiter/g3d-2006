@@ -21,8 +21,8 @@ namespace RBX
 	private:
 		std::map<HopperBin*, BackpackItem*> items;
 	public:
-		void keypress(UserInput* ui);
-		void updateGui(RenderDevice* rd, UserInput* ui);
+		void keypress(G3D::UserInput* ui);
+		void updateGui(RenderDevice* rd, G3D::UserInput* ui);
 		void removeBackpackItem(HopperBin* b) { items.erase(b); }
 		BackpackItem* getBackpackItem(HopperBin* b) { return items[b]; }
 		BackpackItem* createBackpackItem(HopperBin* item);
@@ -49,7 +49,7 @@ namespace RBX
 		void getTextureId();
 		void fromitem(HopperBin* bin);
 		void render(RenderDevice* rd);
-		void handleMouse(UserInput* ui);
+		void handleMouse(G3D::UserInput* ui);
 		BackpackItem()
 		{
 			alignBottom = 1;

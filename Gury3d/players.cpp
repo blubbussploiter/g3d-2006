@@ -4,140 +4,55 @@
 #include "camera.h"
 #include "part.h"
 
-
 #include "mesh.h"
 
 #include "humanoid.h"
 #include "jointservice.h"
-
-RBX::Network::Players* players;
+#include "serializer.h"
+#include "datamodel.h"
 
 void RBX::Network::Player::loadCharacter()
 {
-	RBX::PartInstance* torso;
-	RBX::PartInstance* rArm;
-	RBX::PartInstance* lArm;
-	RBX::PartInstance* rLeg;
-	RBX::PartInstance* lLeg;
-	RBX::PartInstance* head;
-	RBX::Humanoid* human;
-	RBX::Decal* face;
-	RBX::Decal* tshirt;
+	RBX::Instances* load;
+	RBX::Humanoid* h = 0;
 
-	RBX::Render::Mesh* headMesh;
+	if (character) return;
 
-	if (character)
+	load = RBX::Serializer::loadInstances(GetFileInPath("/content/font/character.rbxm"));
+
+	if (load && load->size() > 0)
 	{
-		character->remove();
-		character = 0;
+		RBX::Instance* possibleCharacter = load->at(0);
+		if (possibleCharacter->getClassName() == "Model")
+		{
+			h = RBX::Humanoid::modelIsCharacter(possibleCharacter);
+			if(h)
+				character = (RBX::ModelInstance*)possibleCharacter;
+		}
 	}
+	
+	if (!character) return;
+
+	RBX::PartInstance* head, *humanoidRootPart;
+
+	head = (RBX::PartInstance*)character->findFirstChild("Head");
+	humanoidRootPart = (RBX::PartInstance*)character->findFirstChild("Torso");
+
+	if (!head || !humanoidRootPart) return;
+
+	if (head->getClassName() != "PVInstance" || humanoidRootPart->getClassName() != "PVInstance") return;
 
 	controller = new PlayerController();
 	controller->init(this);
 
-	character = new RBX::ModelInstance();
-	human = new RBX::Humanoid();
-
-	torso = new RBX::PartInstance();
-	rArm = new RBX::PartInstance();
-	lArm = new RBX::PartInstance();
-	rLeg = new RBX::PartInstance();
-	lLeg = new RBX::PartInstance();
-	head = new RBX::PartInstance();
-	headMesh = new RBX::Render::Mesh();
-
-	headMesh->fromMeshType(RBX::Render::MeshType::Head);
-
-	torso->setSize(Vector3(2, 2, 1));
-	rArm->setSize(Vector3(1, 2, 1));
-	lArm->setSize(Vector3(1, 2, 1));
-	rLeg->setSize(Vector3(1, 2, 1));
-	rLeg->setSize(Vector3(1, 2, 1));
-	lLeg->setSize(Vector3(1, 2, 1));
-
-	torso->setCFM(0.1f);
-	//torso->setFriction(0.01);
-	rArm->setCFM(0.1f);
-	//rArm->setFriction(0.01);
-	lArm->setCFM(0.1f);
-	//lArm->setFriction(0.01);
-	rLeg->setCFM(0.1f);
-	//rLeg->setFriction(0.01);
-	lLeg->setCFM(0.1f);
-	//lLeg->setFriction(0.01);
-	head->setCFM(0.1f);
-	//head->setFriction(0.01);
-
-	torso->setPosition(Vector3(0, 20, 0));
-
-	//rArm->setPosition(Vector3(1.5,  torso->getPosition().y+0.06, 0));
-	//lArm->setPosition(Vector3(-1.5, torso->getPosition().y+0.06, 0));
-	rArm->setPosition(Vector3(1.5f, torso->getPosition().y, 0));
-	lArm->setPosition(Vector3(-1.5f, torso->getPosition().y, 0));
-	//lLeg->setPosition(Vector3(0.49,  torso->getPosition().y - 1.6, 0));
-	lLeg->setPosition(Vector3(0.49f,  torso->getPosition().y - 2, 0));
-	rLeg->setPosition(Vector3(-0.5f, torso->getPosition().y - 2, 0));
-	//rLeg->setPosition(Vector3(-0.5, torso->getPosition().y - 1.6, 0));
-	//head->setPosition(Vector3(0, torso->getPosition().y + 1.25, 0));
-	head->setPosition(Vector3(0, torso->getPosition().y + 1.42f, 0));
-
-	rArm->setBrickColor(24);
-	lArm->setBrickColor(24);
-	rLeg->setBrickColor(119);
-	lLeg->setBrickColor(119);
-	head->setBrickColor(24);
-
-	character->primaryPart = torso;
-
-	torso->setName("Torso");
-	rArm->setName("Right Arm");
-	lArm->setName("Left Arm");
-	rLeg->setName("Right Leg");
-	lLeg->setName("Left Leg");
-	head->setName("Head");
-
-	torso->setParent(character);
-	rArm->setParent(character);
-	lArm->setParent(character);
-	rLeg->setParent(character);
-	lLeg->setParent(character);
-	lLeg->setParent(character);
-	head->setParent(character);
-	human->setParent(character);
-	human->setHumanoidAttributes();
-
-	head->locked = 1;
-	torso->locked = 1;
-	rArm->locked = 1;
-	lArm->locked = 1;
-	rLeg->locked = 1;
-	lLeg->locked = 1;
-
-	headMesh->setParent(head);
-	headMesh->setMeshScale(Vector3(1.25f, 1.25f, 1.25f));
-
-	face = new RBX::Decal();
-	tshirt = new RBX::Decal();
-
-	tshirt->fromFile(GetFileInPath("/content/textures/ROBLOX.png"), Texture::TILE, Texture::NEAREST_MIPMAP);
-	tshirt->setFace(BACK);
-	tshirt->setParent(torso);
-	tshirt->decalColor = Color3::white();
-	tshirt->dfactor = GL_ONE_MINUS_SRC_ALPHA;
-
-	face->fromFile(GetFileInPath("/content/textures/face.png"), Texture::TRANSPARENT_BORDER, Texture::NEAREST_MIPMAP);
-	face->setFace(BACK);
-	face->setParent(head);
-
-	torso->setFace(LEFT, Weld);
-	torso->setFace(RIGHT, Weld);
-
-	character->setName(getName());
-
 	Camera::singleton()->focusPart = head;
 	Camera::singleton()->cameraType = Follow;
 
+	character->setName(getName());
+
 	character->buildJoints();
+	h->buildJoints();
+
 	character->setParent(RBX::Workspace::singleton());
 
 }
@@ -154,7 +69,7 @@ void RBX::Network::Player::disposeActiveBin()
 void RBX::Network::Player::setAsController()
 {
 	if (!RBX::RunService::singleton()->isRunning) return;
-	RBX::addController(controller);
+	//RBX::ControllerService::singleton()->addController(controller);
 	RBX::Camera::singleton()->disable(1);
 }
 
@@ -205,13 +120,6 @@ void RBX::Network::Players::setPlayerList(RBX::Gui::GuiList* __playerList)
 		playerList = __playerList;
 }
 
-RBX::Network::Players* RBX::Network::getPlayers()
-{
-	if (!players)
-		players = new RBX::Network::Players();
-	return players;
-}
-
 void RBX::Network::Players::addPlayer(Player* player)
 {
 	if (!players.size())
@@ -227,8 +135,11 @@ void RBX::Network::Players::updatePlayerList()
 	{
 		Player* p = players.at(i);
 		RBX::Gui::GuiLabel* lbl = p->getGuiName();
+
 		if (lbl && lbl->title != p->getName())
+		{
 			lbl->title = p->getName();
+		}
 	}
 }
 
@@ -238,8 +149,14 @@ RBX::ModelInstance* RBX::Network::Players::findLocalCharacter()
 	RBX::Network::Player* player;
 
 	player = players->localPlayer;
+
 	if (player && (player->character))
 		return player->character;
 
 	return 0;
+}
+
+RBX::Network::Players* RBX::Network::getPlayers()
+{
+	return RBX::Datamodel::getDatamodel()->players;
 }

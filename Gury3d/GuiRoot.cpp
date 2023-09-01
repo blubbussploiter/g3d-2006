@@ -23,13 +23,11 @@ RBX::Gui::GuiRoot* RBX::Gui::singleton()
 
 void RBX::Gui::GuiRoot::render(RenderDevice* d)
 {
-	d->push2D();
 	for (unsigned int i = 0; i < objects.size(); i++)
 		objects.at(i)->render(d);
-	d->pop2D();
 }
 
-void RBX::Gui::GuiRoot::doButtonLogic(UserInput* ui, RenderDevice* d)
+void RBX::Gui::GuiRoot::doButtonLogic(G3D::UserInput* ui, RenderDevice* d)
 {
 	for (unsigned int i = 0; i < objects.size(); i++)
 		if (objects.at(i)->isButton)

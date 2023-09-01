@@ -238,7 +238,7 @@ RBX::Instance* readInstance(rapidxml::xml_node<>* instanceNode)
 	return inst;
 }
 
-void iterateNode(rapidxml::xml_node<>* scanNode, RBX::Instance* parent)
+void iterateNode(rapidxml::xml_node<>* scanNode, RBX::Instance* parent, RBX::Instances* instances=0)
 {
 	for (rapidxml::xml_node<>* node = scanNode->first_node(); node; node = node->next_sibling())
 	{
@@ -249,7 +249,11 @@ void iterateNode(rapidxml::xml_node<>* scanNode, RBX::Instance* parent)
 			{
 				read->setParent(parent);
 			}
-			iterateNode(node, read);
+			if (instances && !parent)
+			{
+				instances->push_back(read);
+			}
+			iterateNode(node, read, instances);
 		}
 	}
 }
@@ -268,4 +272,23 @@ void RBX::Serializer::load(std::string fileName)
 
 	iterateNode(doc.first_node(), 0);
 	doc.clear();
+}
+
+RBX::Instances* RBX::Serializer::loadInstances(std::string fileName)
+{
+	rapidxml::file<> file(fileName.c_str());
+	RBX::Instances* i = new RBX::Instances();
+
+	if (file.size() <= 0)
+		return i;
+
+	doc.parse<0>(file.data());
+
+	if (!checkTag())
+		return i;
+
+	iterateNode(doc.first_node(), 0, i);
+	doc.clear();
+
+	return i;
 }

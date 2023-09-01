@@ -1,7 +1,7 @@
-#include "render_shapes.h"
+#include "pvinstance.h"
 #include "pvenums.h"
 
-TextureRef getSurface(RBX::Decal* d, RBX::SurfaceType s)
+TextureRef RBX::getSurface(RBX::SurfaceType s)
 {
 	GImage surfaces;
 	GImage surface;
@@ -38,67 +38,18 @@ TextureRef getSurface(RBX::Decal* d, RBX::SurfaceType s)
 	}
 
 	bool b = surfaces.copySubImage(surface, surfaces, 0, y, 64, 64);
-	d->setTexture(Texture::fromGImage(fn, surface, TextureFormat::AUTO, Texture::TILE));
+
+	TextureRef r = Texture::fromGImage(fn, surface, TextureFormat::AUTO, Texture::TILE);
+
+	return r;
 }
 
-std::vector<Vector2> RBX::Surface::getTexCoords(RBX::NormalId face, Vector3 sz, bool isDrawingDecal)
-{
-	float u;
-	float v;
-
-	switch (face)
-	{
-		case TOP:
-		case BOTTOM:
-		{
-			u = -sz.x;
-			v = sz.z;
-			break;
-		}
-		case FRONT:
-		case BACK:
-		{
-			u = -sz.x;
-			v = sz.y;
-			break;
-		}
-		case LEFT:
-		case RIGHT:
-		{
-			u = sz.z;
-			v = sz.y;
-			break;
-		}
-	}
-
-	return
-	{
-
-		Vector2(u, v), /* first coord (left top corner?)*/
-		Vector2(0, v), /* second coord (left bottom corner?) */
-		Vector2(0, 0), /* third coord (right bottom corner?) */
-		Vector2(u, 0)  /* last coord (right top corner?) */
-	};
-}
-
-void RBX::Surface::setSurfaceType(SurfaceType srfc)
-{
-	surface = srfc;
-
-	decal = 0;
-	getDecal();
-}
-
-CoordinateFrame RBX::Surface::getSurfaceCenter()
+CoordinateFrame RBX::getSurfaceCenter(NormalId face, Vector3 size, Extents extents)
 {
 	CoordinateFrame center = CoordinateFrame();
-	Vector3 size, extentsCenter, positionCenter;
-	NormalId face;
+	Vector3 extentsCenter, positionCenter;
 
-	face = getDecal()->getFace();
-
-	size = parent->getSize() / 2;
-	extentsCenter = parent->getLocalExtents().getCenter();
+	extentsCenter = extents.getCenter();
 
 	switch (face)
 	{
@@ -135,22 +86,9 @@ CoordinateFrame RBX::Surface::getSurfaceCenter()
 	}
 
 	CoordinateFrame lookAt;
+
 	lookAt = extentsCenter;
 	lookAt.lookAt(positionCenter);
+
 	return CoordinateFrame(lookAt.rotation, positionCenter);
-}
-
-RBX::Decal* RBX::Surface::getDecal()
-{
-	if (!decal)
-	{
-		decal = new RBX::Decal();
-		getSurface(decal, surface);
-		decal->sfactor = GL_SRC_ALPHA;
-		decal->dfactor = GL_DST_COLOR;
-		decal->transparency = 0.0f;
-		decal->isDefinedSurfaceDecal = 1;
-	}
-
-	return decal;
 }

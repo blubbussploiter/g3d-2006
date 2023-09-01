@@ -1,25 +1,28 @@
-#include "workspace.h"
-#include "runservice.h"
 
 #include "part.h"
 #include "model.h"
 
 #include "stdout.h"
+#include "datamodel.h"
 
-RBX::Workspace* workspace;
+#include "camera.h"
 
 RBX::Extents RBX::Workspace::getGameExtents()
 {
     Vector3 high = Vector3::zero();
+    std::vector<RBX::Render::Renderable*> pvs = RBX::Scene::singleton()->getArrayOfObjects();
 
     for (unsigned int i = 0; i < pvs.size(); i++)
     {
         RBX::PVInstance* pv;
         pv = (RBX::PVInstance*)(pvs.at(i));
-        high += pv->getLocalExtents().high;
+        if (pv && pv->body)
+        {
+            high += pv->getLocalExtents().high;
+        }
     }
 
-    return RBX::Extents(-high, high);
+    return RBX::Extents(-high / 2, high / 2);
 }
 
 void RBX::Workspace::wakeUpModels()
@@ -56,77 +59,37 @@ void updatePVInstances(RBX::Instances* PVInstances)
     }
 }
 
-void RBX::Workspace::renderPVInstances(RenderDevice* d, bool renderOpaque)
-{
-    for (unsigned int i = 0; i < pvs.size(); i++)
-    {
-        RBX::Instance* child = pvs.at(i);
-
-        if (child->isRenderable)
-        {
-            if (child->getClassName() == "PVInstance")
-            {
-                RBX::PVInstance* inst = static_cast<RBX::PVInstance*>(child);
-                if (renderOpaque && inst->getTransparency() <= 0)
-                {
-                    inst->render(d);
-                }
-                if(!renderOpaque)
-                {
-                    if (inst->getTransparency() < 1)
-                    {
-                        inst->render(d);
-                    }
-                }
-            }
-        }
-
-    }
-}
-
 void RBX::getPVInstances(RBX::Instances* instances, RBX::Instances* pvs)
 {
     for (unsigned int i = 0; i < instances->size(); i++)
     {
         RBX::Instance* child = instances->at(i);
 
-        if (child->getClassName() == "PVInstance" && !contains((*pvs), 
-            child))
+        if (child->getClassName() == "PVInstance")
             pvs->push_back(child);
 
         getPVInstances(child->getChildren(), pvs);
     }
 }
 
-void RBX::Workspace::render(RenderDevice* d)
+void RBX::Workspace::onDescendentAdded(RBX::Instance* descendent)
 {
-    renderPVInstances(d, 1); /* render opaque objects first */
-    renderPVInstances(d, 0); /* then transparent objects */
-}
-
-void RBX::Workspace::update()
-{
-    if (!RBX::RunService::singleton()->isRunning) return;
-    updatePVInstances(&pvs);
+    RBX::View::singleton()->onWorkspaceDescendentAdded(descendent);
 }
 
 RBX::Workspace* RBX::Workspace::singleton()
 {
-    if (!workspace) workspace = new RBX::Workspace();
-    return workspace;
+    return RBX::Datamodel::getDatamodel()->workspace;
 }
 
-RBX::Instances* RBX::Workspace::getPvs()
+/* hacky method */
+
+RBX::Camera* RBX::Workspace::getCurrentCamera()
 {
-    return &pvs;
+    return currentCamera;
 }
 
-void RBX::Workspace::removePV(RBX::PVInstance* pv)
+void RBX::Workspace::setCurrentCamera(Camera* camera)
 {
-    pvs.erase(std::remove(pvs.begin(), pvs.end(), pv));
-}
-
-void RBX::Workspace::wakeUpPVS()
-{
-    getPVInstances(getChildren(), &pvs);
+    currentCamera = camera;
 }

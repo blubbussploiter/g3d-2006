@@ -1,10 +1,13 @@
-#include "render_shapes.h"
+#include "pvinstance.h"
 #include "lighting.h"
 #include "pvenums.h"
 #include "rbxmath.h"
 #include "stdout.h"
 #include "mesh.h"
 #include "ray.h"
+
+#define FRONT_CROSS Color3(0.35f, 0.35f, 0.35f)
+#define BACK_CROSS  Color3(1,1,1)
 
 /* Booleans */
 
@@ -31,143 +34,172 @@ const Reflection::PropertyDescriptor<RBX::PVInstance, int> RBX::PVInstance::prop
 const Reflection::PropertyDescriptor<RBX::PVInstance, int> RBX::PVInstance::prop_formFactor("formFactor", Reflection::Types::TYPE_Number, &RBX::PVInstance::getFormFactor, &RBX::PVInstance::setFormFactor, RBX::PVInstance::properties);
 const Reflection::PropertyDescriptor<RBX::PVInstance, float> RBX::PVInstance::prop_transparency("Transparency", Reflection::Types::TYPE_Number, &RBX::PVInstance::getTransparency, &RBX::PVInstance::setTransparency, RBX::PVInstance::properties);
 
-void drawFace(std::vector<Vector2> surfaceTexCoords, Vector3 v0, Vector3 v1, Vector3 v2, Vector3 v3)
+TextureRef texture_bumps;
+TextureRef texture_studs;
+TextureRef texture_inlets;
+TextureRef texture_weld;
+
+void RBX::initSurfaces()
+{
+    texture_weld = RBX::getSurface(RBX::Weld);
+    texture_bumps = RBX::getSurface(RBX::Glue);
+    texture_studs = RBX::getSurface(RBX::Studs);
+    texture_inlets = RBX::getSurface(RBX::Inlet);
+}
+
+void drawFace(Vector2 uv, Vector3 v0, Vector3 v1, Vector3 v2, Vector3 v3)
 {
     glNormal((v1 - v0).cross(v2 - v0).direction());
 
-    glTexCoord2d(surfaceTexCoords[0].x, surfaceTexCoords[0].y);
+    glTexCoord2d(uv.x, uv.y);
     glVertex(v0);
-    glTexCoord2d(surfaceTexCoords[1].x, surfaceTexCoords[1].y);
+    glTexCoord2d(0, uv.y);
     glVertex(v1);
-    glTexCoord2d(surfaceTexCoords[2].x, surfaceTexCoords[2].y);
+    glTexCoord2d(0, 0);
     glVertex(v2);
-    glTexCoord2d(surfaceTexCoords[3].x, surfaceTexCoords[3].y);
+    glTexCoord2d(uv.x, 0);
     glVertex(v3);
 }
 
 void RBX::PVInstance::setFace(NormalId f, SurfaceType s)
 {
 
+    int glid = -1;
+
+    switch (s)
+    {
+    case Studs: glid = texture_studs->openGLID(); break;
+    case Inlet: glid = texture_inlets->openGLID(); break;
+    case Glue: glid = texture_bumps->openGLID(); break;
+    case Weld: glid = texture_weld->openGLID(); break;
+    default: break;
+    }
+
     switch (f)
     {
     case NormalId::TOP:
     {
-        top->setSurfaceType(s);
-        top->getDecal()->setFace(f);
+        top = s;
+        idTop = glid;
         break;
     }
     case NormalId::BOTTOM:
     {
-        bottom->setSurfaceType(s);
-        bottom->getDecal()->setFace(f);
+        bottom = s;
+        idBottom = glid;
         break;
     }
     case NormalId::LEFT:
     {
-        left->setSurfaceType(s);
-        left->getDecal()->setFace(f);
+        left = s;
+        idLeft = glid;
         break;
+    }
     case NormalId::RIGHT:
     {
-        right->setSurfaceType(s);
-        right->getDecal()->setFace(f);
+        right = s;
+        idRight = glid;
         break;
     }
     case NormalId::FRONT:
     {
-        front->setSurfaceType(s);
-        front->getDecal()->setFace(f);
+        front = s;
+        idFront = glid;
         break;
     }
     case NormalId::BACK:
     {
-        back->setSurfaceType(s);
-        back->getDecal()->setFace(f);
+        back = s;
+        idBack = glid;
         break;
     }
     }
+}
+
+void RBX::PVInstance::renderSurfaces(RenderDevice* rd)
+{
+    if (!specialShape)
+    {
+        renderSurface(rd, this, TOP, top, idTop);
+        renderSurface(rd, this, BOTTOM, bottom, idBottom);
+        renderSurface(rd, this, RIGHT, right, idRight);
+        renderSurface(rd, this, LEFT, left, idLeft);
+        renderSurface(rd, this, FRONT, front, idFront);
+        renderSurface(rd, this, BACK, back, idBack);
+    }
+}
+
+void RBX::PVInstance::render3DSurfaces(RenderDevice* rd)
+{
+
+    render3dSurface(rd, TOP);
+    render3dSurface(rd, BOTTOM);
+    render3dSurface(rd, FRONT);
+    render3dSurface(rd, BACK);
+    render3dSurface(rd, LEFT);
+    render3dSurface(rd, RIGHT);
+
+}
+
+void RBX::renderSurface(RenderDevice* rd, RBX::PVInstance* pv, NormalId n, SurfaceType s, int glid)
+{
+    if (glid != -1)
+    {
+        RBX::Render::rawDecal(rd, pv, n, glid, GL_SRC_ALPHA, GL_DST_COLOR);
     }
 }
 
 void RBX::PVInstance::render(RenderDevice* d)
 {
 
-    glEnable(GL_DEPTH_TEST);
     d->setObjectToWorldMatrix(getCFrame());
 
-    RBX::Lighting::singleton()->begin(d, 50.0f);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    switch (shape)
+    glColor(color.r, color.g, color.b, alpha);
+
+    if (transparency < 1)
     {
+        switch (shape)
+        {
         case part:
-        {    
+        {
 
-            renderFace(TOP);
-            renderFace(BOTTOM);
-            renderFace(FRONT);
-            renderFace(BACK);
-            renderFace(LEFT);
-            renderFace(RIGHT);
+           renderFace(d, TOP);
+           renderFace(d, BOTTOM);
+           renderFace(d, FRONT);
+           renderFace(d, BACK);
+           renderFace(d, LEFT);
+           renderFace(d, RIGHT);
 
-            /* render Decals */
-
-            for (unsigned int i = 0; i < getChildren()->size(); i++)
-            {
-                RBX::Instance* child = getChildren()->at(i);
-                if (!child)
-                    continue;
-                if (child->getClassName() == "Decal")
-                    ((RBX::Decal*)(child))->render(this);
-            }
+           renderSurfaces(d);
 
             break;
         }
         case ball:
-        {     
-
+        {
             RBX::Primitives::drawBall(d, this);
             break;
         }
         case cylinder:
         {
+
             RBX::Primitives::drawCylinder(d, this);
+            drawCylinderPluses(d);
+
             break;
+        }
         }
     }
 
-    RBX::Lighting::singleton()->end(d);
-
-    render3dSurface(d, TOP);
-    render3dSurface(d, BOTTOM);
-    render3dSurface(d, FRONT);
-    render3dSurface(d, BACK);
-    render3dSurface(d, LEFT);
-    render3dSurface(d, RIGHT);
-
-    glDisable(GL_DEPTH_TEST);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    glDisable(GL_BLEND);
 
 }
 
-void RBX::PVInstance::renderFace(NormalId face, bool isAlpha, bool isDrawingDecal)
+void RBX::PVInstance::renderFace(RenderDevice* rd, NormalId face, bool isDrawingDecal)
 {
-    Vector3 realSz;
-    float alpha = 1;
-
-    realSz = (size) / 2;
-    realSz.y *= getAffectedFormFactor(this);
-
-    if (!isAlpha)
-    {
-        if (transparency <= 1)
-        {
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        }
-        alpha = (1 - transparency);
-    }
-
-    if(!isDrawingDecal)
-        glColor(color.r, color.g, color.b, alpha);
 
     glBegin(GL_QUADS);
 
@@ -175,93 +207,147 @@ void RBX::PVInstance::renderFace(NormalId face, bool isAlpha, bool isDrawingDeca
     {
         case NormalId::TOP:
         {
-            drawFace(top->getTexCoords(face, realSz,isDrawingDecal), Vector3(realSz.x, realSz.y, -realSz.z),
-                Vector3(-realSz.x, realSz.y, -realSz.z),
-                Vector3(-realSz.x, realSz.y, realSz.z),
-                Vector3(realSz.x, realSz.y, realSz.z));
+            drawFace(uv0,
+                Vector3(size.x, size.y, -size.z),
+                Vector3(-size.x, size.y, -size.z),
+                Vector3(-size.x, size.y, size.z),
+                Vector3(size.x, size.y, size.z));
             break;
         }
         case NormalId::BOTTOM:
         {
-            drawFace(bottom->getTexCoords(face, realSz, isDrawingDecal), Vector3(realSz.x, -realSz.y, realSz.z),
-                Vector3(-realSz.x, -realSz.y, realSz.z),
-                Vector3(-realSz.x, -realSz.y, -realSz.z),
-                Vector3(realSz.x, -realSz.y, -realSz.z));
+            drawFace(uv0, 
+                Vector3(size.x, -size.y, size.z),
+                Vector3(-size.x, -size.y, size.z),
+                Vector3(-size.x, -size.y, -size.z),
+                Vector3(size.x, -size.y, -size.z));
             break;
         }
         case NormalId::FRONT:
         {
-            drawFace(front->getTexCoords(face, realSz, isDrawingDecal),Vector3(realSz.x, realSz.y, realSz.z),
-                Vector3(-realSz.x, realSz.y, realSz.z),
-                Vector3(-realSz.x, -realSz.y, realSz.z),
-                Vector3(realSz.x, -realSz.y, realSz.z));
+            drawFace(uv1,
+                Vector3(size.x, size.y, size.z),
+                Vector3(-size.x, size.y, size.z),
+                Vector3(-size.x, -size.y, size.z),
+                Vector3(size.x, -size.y, size.z));
         }
         case NormalId::BACK:
         {
-            drawFace(back->getTexCoords(face, realSz, isDrawingDecal),Vector3(realSz.x, -realSz.y, -realSz.z),
-                Vector3(-realSz.x, -realSz.y, -realSz.z),
-                Vector3(-realSz.x, realSz.y, -realSz.z),
-                Vector3(realSz.x, realSz.y, -realSz.z));
+            drawFace(uv1,
+                Vector3(size.x, -size.y, -size.z),
+                Vector3(-size.x, -size.y, -size.z),
+                Vector3(-size.x, size.y, -size.z),
+                Vector3(size.x, size.y, -size.z));
             break;
         }
         case NormalId::LEFT:
         {
-            drawFace(left->getTexCoords(face, realSz, isDrawingDecal),Vector3(-realSz.x, realSz.y, realSz.z),
-                Vector3(-realSz.x, realSz.y, -realSz.z),
-                Vector3(-realSz.x, -realSz.y, -realSz.z),
-                Vector3(-realSz.x, -realSz.y, realSz.z));
+            drawFace(uv2,
+                Vector3(-size.x, size.y, size.z),
+                Vector3(-size.x, size.y, -size.z),
+                Vector3(-size.x, -size.y, -size.z),
+                Vector3(-size.x, -size.y, size.z));
             break;
         }
         case NormalId::RIGHT:
         {
-            drawFace(right->getTexCoords(face, realSz, isDrawingDecal),Vector3(realSz.x, realSz.y, -realSz.z),
-                Vector3(realSz.x, realSz.y, realSz.z),
-                Vector3(realSz.x, -realSz.y, realSz.z),
-                Vector3(realSz.x, -realSz.y, -realSz.z));
+            drawFace(uv2,
+                Vector3(size.x, size.y, -size.z),
+                Vector3(size.x, size.y, size.z),
+                Vector3(size.x, -size.y, size.z),
+                Vector3(size.x, -size.y, -size.z));
             break;
         }
     }
 
-    glEnd();
+    glEnd();   
 
-    if (!isAlpha)
+}
+
+void RBX::PVInstance::drawCylinderPluses(RenderDevice* d)
+{
+    float radius, axis;
+
+    radius = getSize().x;
+    axis = getSize().y;
+
+    glRotatef(-90.0, 0.0, 1.0, 0.0);
+
+    glTranslatef(0.0, 0.0, -axis * 0.5);
+    glTranslatef(0.0, 0.0, axis);
+
+    RBX::Primitives::drawLine(cylinderOriginX, d, FRONT_CROSS, lineWidth, -lineHeight);
+    RBX::Primitives::drawLine(cylinderOriginX, d, FRONT_CROSS, -lineWidth, -lineHeight);
+    RBX::Primitives::drawLine(cylinderOriginY, d, FRONT_CROSS, -lineHeight, lineWidth);
+    RBX::Primitives::drawLine(cylinderOriginY, d, FRONT_CROSS, -lineHeight, -lineWidth);
+
+    glRotatef(180.0, 0.0, 1.0, 0.0);
+    glTranslatef(0.0, 0.0, axis);
+
+    RBX::Primitives::drawLine(cylinderOriginX, d, BACK_CROSS, lineWidth, -lineHeight);
+    RBX::Primitives::drawLine(cylinderOriginX, d, BACK_CROSS, -lineWidth, -lineHeight);
+    RBX::Primitives::drawLine(cylinderOriginY, d, BACK_CROSS, -lineHeight, lineWidth);
+    RBX::Primitives::drawLine(cylinderOriginY, d, BACK_CROSS, -lineHeight, -lineWidth);
+
+}
+
+float RBX::getAffectedFormFactor(RBX::PVInstance* pv)
+{
+    switch (pv->getFormFactor())
     {
-        if (transparency < 1)
-        {
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-            glDisable(GL_BLEND);
-            renderSurface(face);
-        }
+    case RBX::Brick:
+    {
+        return 1.2f;
+    }
+    case RBX::Plate:
+    {
+        return 0.4f;
+    }
+    case RBX::Symmetric:
+    {
+        return 1.0f;
+    }
     }
 }
 
-void RBX::PVInstance::onRemove()
+void RBX::PVInstance::calculateCylinderOffsets()
 {
-    RBX::Workspace::singleton()->removePV(this);
+    float radius, axis, scale;
+
+    radius = getSize().x;
+    axis = getSize().y;
+
+    scale = radius * 0.1;
+
+    cylinderOriginX = Vector2(0, scale / 2);
+    cylinderOriginY = Vector2(scale / 2, 0);
+
+    lineWidth = radius / 1.5f;
+    lineHeight = scale;
+}
+
+void RBX::PVInstance::calculateUvs()
+{
+    uv0 = Vector2(-size.x, size.z);
+    uv1 = Vector2(-size.x, size.y);
+    uv2 = Vector2(size.z, size.y);
 }
 
 void RBX::PVInstance::render3dSurface(RenderDevice* d, NormalId face)
 {
-    Surface* s;
     SurfaceType type;
+    type = getSurface(face);
 
-    s = getSurface(face);
-    type = s->getSurfaceType();
-
-    if (!s) return;
-
-    CoordinateFrame center;
-    center = s->getSurfaceCenter();
-
-    d->pushState();
-    d->setObjectToWorldMatrix(getCFrame());
-
-    switch (type)
+    if (type != SurfaceType::Smooth)
     {
-        case SurfaceType::Smooth:
+
+        CoordinateFrame center;
+        center = getSurfaceCenter(face, getSize(), getLocalExtents());
+
+        d->setObjectToWorldMatrix(getCFrame());
+
+        switch (type)
         {
-            goto end;
-        }
         case SurfaceType::Hinge:
         {
             Draw::cylinder(Cylinder(center.translation - center.lookVector() * 0.5f, center.translation + center.lookVector() * 0.5f, 0.2f), d, Color3::yellow(), Color4::clear());
@@ -276,38 +362,16 @@ void RBX::PVInstance::render3dSurface(RenderDevice* d, NormalId face)
 
             break;
         }
-    }
-
-end:
-
-    d->popState();
-}
-
-void RBX::PVInstance::renderSurface(NormalId face)
-{
-    Surface* s;
-    s = getSurface(face);
-
-    if (!s) return;
-
-    switch (s->getSurfaceType())
-    {
-        case SurfaceType::Hinge:
-        case SurfaceType::Motor:
-        case SurfaceType::Smooth:
-        case SurfaceType::SteppingMotor:
-        {
-            return;
-        }
         default:
         {
-            s->getDecal()->render(this);
+            break;
         }
+        }
+
     }
 }
 
-
-RBX::Surface* RBX::PVInstance::getSurface(NormalId face)
+RBX::SurfaceType RBX::PVInstance::getSurface(NormalId face)
 {
     switch (face)
     {
@@ -336,5 +400,5 @@ RBX::Surface* RBX::PVInstance::getSurface(NormalId face)
         return right;
     }
     }
-    return 0;
+    return Smooth;
 }

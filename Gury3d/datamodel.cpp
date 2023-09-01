@@ -1,15 +1,16 @@
-#include <thread>
 
-#include "datamodel.h"
+#include "appmanager.h"
 #include "serializer.h"
 #include "stdout.h"
 
-RBX::Datamodel* datamodel;
-
 RBX::Datamodel* RBX::Datamodel::getDatamodel()
 {
-    if (!datamodel) datamodel = new RBX::Datamodel();
-    return datamodel;
+    RBX::Experimental::Application* application = RBX::AppManager::singleton()->getApplication();
+    if (application)
+    {
+        return application->getDatamodel();
+    }
+    return 0;
 }
 
 void RBX::Datamodel::loadContent(std::string contentId)
@@ -25,20 +26,25 @@ void RBX::Datamodel::close()
     RBX::RunService::singleton()->getPhysics()->close();
 }
 
+void RBX::Datamodel::open()
+{
+    workspace = new Workspace();
+    runService = new RunService();
+    jointService = new JointService();
+    lighting = new Lighting();
+    scene = new Scene();
+    controllerService = new ControllerService();
+    players = new RBX::Network::Players();
+    guiRoot = Gui::singleton();
+}
+
 void RBX::Datamodel::step()
 {
-
-    if (!runService->isRunning)
-        return;
-
-    for (int i = 0; i < 4; i++)
+    if (runService->isRunning)
     {
-
         runService->heartbeat();
-        workspace->update();
-
+        jointService->update();
+        RBX::Scene::singleton()->updatePhysicsObjects();
     }
-
-    jointService->update();
 
 }

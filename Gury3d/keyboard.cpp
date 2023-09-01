@@ -61,7 +61,7 @@ void RBX::KeyboardController::mv_update()
 
 }
 
-void RBX::KeyboardController::handleInput(UserInput* ui)
+void RBX::KeyboardController::handleInput(G3D::UserInput* ui)
 {
 	Controller::handleInput(ui);
 }

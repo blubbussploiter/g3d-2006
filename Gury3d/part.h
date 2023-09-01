@@ -2,7 +2,7 @@
 #ifndef PART_H
 #define PART_H
 
-#include "render_shapes.h"
+#include "pvinstance.h"
 #include "brickcolor.h"
 
 #include "enum.h"
@@ -19,7 +19,12 @@ namespace RBX
 			static Reflection::PropertyDescriptor<PartInstance, BrickColor> prop_brickcolor1;
 			static Reflection::PropertyDescriptor<PartInstance, int> prop_brickcolor;
 
-			void setBrickColor(int bc) { brickColor = BrickColor::fromNumber(bc); }
+			void setBrickColor(int bc) {
+				Color3* b;
+				brickColor = BrickColor::fromNumber(bc);
+				b = brickColor->getColor();
+				color = Color3(b->r, b->g, b->b);
+			}
 			int getBrickColor() { return brickColor->getNumber(); }
 
 			virtual void render(RenderDevice* rd);

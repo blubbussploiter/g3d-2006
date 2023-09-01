@@ -2,15 +2,14 @@
 #include "stdout.h"
 #include "model.h"
 
-#include "workspace.h"
-#include "jointservice.h"
-
 #include "rbxmath.h"
 #include "ray.h"
 
 #include "snaps.h"
 #include "hinge.h"
 #include "motor.h"
+
+#include "datamodel.h"
 
 RBX::JointService* jointService;
 
@@ -63,10 +62,9 @@ RBX::NormalId RBX::JointService::getIntersectingFace(RBX::PVInstance* p0, RBX::P
 
 void RBX::JointService::applyJoint(RBX::PVInstance* p0, RBX::PVInstance* p1, NormalId intersect)
 {
-	RBX::Surface* surface = p0->getSurface(intersect);
-	if (!surface) return;
+	RBX::SurfaceType surface = p0->getSurface(intersect);
 
-	switch (surface->getSurfaceType())
+	switch (surface)
 	{
 		case RBX::SurfaceType::Motor:
 		{
@@ -93,20 +91,7 @@ void RBX::JointService::manualBuild(RBX::PVInstance* p0, RBX::PVInstance* p1)
 
 bool RBX::JointService::areJointed(RBX::PVInstance* p0, RBX::PVInstance* p1)
 {
-
-	RBX::Joint* j;
-
-	for (auto a : *getChildren())
-	{
-		j = (RBX::Joint*)(a);
-		if (j)
-		{
-			if (j->part0 == p0 || j->part0 == p1 && j->part1 == p0 || j->part1 == p1)
-				return 1;
-		}
-	}
-
-	return 0;
+	return (p0->body->_body == p1->body->_body);
 }
 
 void RBX::JointService::buildJoints(RBX::Instance* holder)
@@ -130,16 +115,12 @@ void RBX::JointService::buildJoints(RBX::Instance* holder)
 		{
 			if (holder->isAncestorOf(part0) && holder->isAncestorOf(part1))
 			{
-				//if (!areJointed(part0, part1))
-				//{
+				if (!areJointed(part0, part1))
+				{
+					NormalId intersect = getIntersectingFace(part0, part1);
+					applyJoint(part1, part0, intersect);
+				}
 
-				//}
-
-
-				RBX::StandardOut::print(RBX::MESSAGE_INFO, "Joint '%s', '%s'",
-					part0->getName().c_str(), part1->getName().c_str());
-				NormalId intersect = getIntersectingFace(part0, part1);
-				applyJoint(part1, part0, intersect);
 			}
 		}
 	}
@@ -153,13 +134,13 @@ void RBX::JointService::update()
 		for (unsigned int i = 0; i < children->size(); i++)
 		{
 			RBX::Joint* joint = (RBX::Joint*)(children->at(i));
-			joint->createJoint();
+			if(!joint->isCreated)
+				joint->createJoint();
 		}
 	}
 }
 
 RBX::JointService* RBX::JointService::singleton()
 {
-	if (!jointService) jointService = new JointService();
-	return jointService;
+	return RBX::Datamodel::getDatamodel()->jointService;
 }

@@ -8,11 +8,18 @@ namespace RBX
 	{
 	private:
 		int number;
-		Color3 color;
+		Color3* color;
 	public:
-		Color3 getColor();
+		Color3* getColor();
+
 		int getNumber() { return number; }
 		static BrickColor* fromNumber(int number);
+
+		BrickColor()
+		{
+			color = 0;
+			number = 0;
+		}
 	};
 }
 #endif

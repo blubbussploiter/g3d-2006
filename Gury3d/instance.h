@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "property.h"
+#include "signal.h"
 
 namespace RBX
 {
@@ -29,7 +30,7 @@ namespace RBX
 	public:
 
 		bool isRenderable;
-		bool isAffectedByPhysics;
+		bool isAffectedByPhysics; /* derived from PVInstance? */
 
 		bool isParentLocked;
 		bool isSteppable;
@@ -40,6 +41,8 @@ namespace RBX
 		static Reflection::PropertyDescriptor<Instance, std::string> prop_className;
 		static Reflection::PropertyDescriptor<Instance, bool> prop_archivable;
 		static Reflection::PropertyDescriptor<Instance, Instance*> prop_parent;
+
+		//Reflection::signal<void, RBX::Instance*> descendantAdded;
 
 		bool isAncestorOf(RBX::Instance* i);
 
@@ -72,6 +75,13 @@ namespace RBX
 		virtual void onRemove() {};
 		virtual void onStep() {};
 
+		virtual void onDescendentAdded(RBX::Instance* child) {};
+		virtual void onChildAdded(RBX::Instance* child) {};
+
+		bool contains(const RBX::Instance* child);
+
+		void signalOnDescendentAdded(RBX::Instance* newParent, RBX::Instance* oldParent);
+
 		Instances* getChildren() { return children; }
 
 		std::string getClassName() { return className; }
@@ -81,10 +91,10 @@ namespace RBX
 
 		Instance* findFirstChild(std::string name);
 
-		Instance() : name("Instance"), className("Instance"), parent(NULL), children(new Instances()), isParentLocked(false) {}
-		Instance(Instance* parent) : name("Instance"), className("Instance"), parent(NULL), children(new Instances()), isParentLocked(false) {}
-
-		Instance(std::string name, bool isParentLocked) : name(name), className(name), parent(NULL), children(new Instances()), isParentLocked(isParentLocked) {}
+		Instance() : name("Instance"), className("Instance"), parent(NULL), isParentLocked(false) 
+		{
+			children = new RBX::Instances();
+		}
 
 		virtual ~Instance() { }
 	};

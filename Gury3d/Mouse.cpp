@@ -2,14 +2,12 @@
 #include "camera.h"
 #include "players.h"
 #include "humanoid.h"
+#include "appmanager.h"
 #include "ray.h"
 #include "strings.h"
 
 unsigned int Rendering::mouse_glid;
 bool Rendering::isOverGuiObject;
-
-float RBX::Mouse::x = 0;
-float RBX::Mouse::y = 0;
 
 Vector3 RBX::Mouse::dir = Vector3::zero();
 Vector3 RBX::Mouse::hitWorld = Vector3::zero();
@@ -21,20 +19,11 @@ TextureRef cursor_far;
 TextureRef cursor_close;
 
 float Rendering::szx = 150, Rendering::szy = 150;
+float x, y;
 
-void RBX::Mouse::update(float _x, float _y)
+bool Rendering::shouldRenderAsFar()
 {
-	x = _x;
-	y = _y;
-}
-
-bool Rendering::shouldRenderAsFar() /* check distance later, new member, ->getClosestPoint for roblox ray */ /* FIX THIS */
-{
-	//RBX::PVInstance* o = RBX::Mouse::getTarget();
-	//if (o)
-	//	printf("o = %s\n", o->getName().c_str());
-	//return (!o);
-	return 0;
+	return cursor_custom.isNull();
 }
 
 RBX::PVInstance* RBX::Mouse::getTarget(RBX::PVInstance* ignorePart) /* ignore part for dragger tool */
@@ -42,19 +31,22 @@ RBX::PVInstance* RBX::Mouse::getTarget(RBX::PVInstance* ignorePart) /* ignore pa
 	RBX::Camera* camera = RBX::Camera::singleton();
 	Ray ray;
 
-	ray = camera->camera->worldRay(x, y, camera->rd->getViewport());
-	target = RBX::World::getPartFromG3DRay(ray);
+	ray = camera->camera->worldRay(x, y, RBX::AppManager::singleton()->getApplication()->renderDevice->getViewport());
+	target = RBX::World::getPartFromG3DRay(ray, hitWorld);
 
 	return target;
 }
 
-void Rendering::renderCursor(UserInput* ui, RenderDevice* rd)
+void Rendering::renderCursor(G3D::UserInput* ui, RenderDevice* rd)
 {
 	Vector2 mpos;
 	Vector2 sz;
 
 	mpos = ui->mouseXY();
 	sz = Vector2(szx, szy);
+
+	x = mpos.x;
+	y = mpos.y;
 
 	mpos.x -= sz.x /2;
 	mpos.y -= sz.y /2;
@@ -68,12 +60,14 @@ void Rendering::renderCursor(UserInput* ui, RenderDevice* rd)
 	mouse_glid = cursor_close->openGLID();
 
 	if (shouldRenderAsFar())
+	{
 		mouse_glid = cursor_far->openGLID();
+	}
 
 	if (!cursor_custom.isNull())
+	{
 		mouse_glid = cursor_custom->openGLID();
-
-	rd->push2D();
+	}
 
 	glEnable(GL_TEXTURE_2D);
 	glEnable(GL_BLEND);
@@ -97,5 +91,4 @@ void Rendering::renderCursor(UserInput* ui, RenderDevice* rd)
 	glEnd();
 	glDisable(GL_TEXTURE_2D);
 
-	rd->pop2D();
 }

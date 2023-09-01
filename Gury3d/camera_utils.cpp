@@ -103,7 +103,7 @@ void RBX::Camera::Zoom(short delta)
 		if (zoom>CAM_ZOOM_MIN)
 		{
 			setFrame(zoomFrame);
-			if(cameraType == Follow) tiltDown(25, 1);
+			if(cameraType == Follow) tiltDown(15, 1);
 		}
 		else
 		{
@@ -118,7 +118,7 @@ void RBX::Camera::Zoom(short delta)
 		if (zoom<CAM_ZOOM_MAX)
 		{
 			setFrame(zoomFrame);
-			if (cameraType == Follow) tiltUp(25, 1);
+			if (cameraType == Follow) tiltUp(15, 1);
 		}
 		else
 		{

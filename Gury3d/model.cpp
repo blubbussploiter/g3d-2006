@@ -1,6 +1,8 @@
 #include "model.h"
+
 #include "runservice.h"
 #include "jointservice.h"
+
 #include "workspace.h"
 #include "stdout.h"
 
@@ -45,14 +47,17 @@ void RBX::ModelInstance::makeController()
 		}
 		default: return;
 	}
-
-	RBX::StandardOut::print(RBX::MESSAGE_INFO, "Created Controller 0x%08X for '%s'", controller, getName().c_str());
-	RBX::addController(controller);
+	//RBX::ControllerService::singleton()->addController(controller);
 }
 
 void RBX::ModelInstance::setController(int c)
 {
 	controllerType = (ControllerTypes)c;
+}
+
+void RBX::ModelInstance::setPrimaryPartCFrame(CoordinateFrame cframe)
+{
+	getPrimaryPart()->setCFrame(cframe);
 }
 
 /* positional things */
@@ -99,7 +104,6 @@ void RBX::ModelInstance::lookAt(Vector3 vect)
 	}
 }
 
-
 RBX::PartInstance* RBX::ModelInstance::getPrimaryPartInternal()
 {
 	RBX::PartInstance* result = 0;
@@ -140,7 +144,6 @@ void RBX::ModelInstance::buildJoints()
 			static_cast<RBX::ModelInstance*>(child)->buildJoints();
 		}
 	}
-	RBX::StandardOut::print(RBX::MESSAGE_INFO, "ModelInstance::buildJoints(), building joints for '%s', joints to build : %d", getName().c_str(), children->size());
 	RBX::JointService::singleton()->buildJoints(this);
 }
 

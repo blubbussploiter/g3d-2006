@@ -34,7 +34,13 @@ namespace RBX
 			bool isButton;
 
 			virtual void render(RenderDevice* d) = 0;
-			GuiObject() : visible(true) { setClassName("GuiObject"); setName("GuiObject"); }
+			GuiObject() : visible(true) {
+				alignBottom = 0;
+				alignRight = 0;
+				alignBottomRight = 0;
+				setClassName("GuiObject"); 
+				setName("GuiObject");
+			}
 		};
 
 		class GuiBox : public GuiObject
@@ -82,7 +88,7 @@ namespace RBX
 			virtual void render(RenderDevice* d);
 			virtual bool mouseIn(Vector2 mosPos);
 
-			virtual void handleMouse(UserInput* ui);
+			virtual void handleMouse(G3D::UserInput* ui);
 
 			GuiButton() {
 				isButton = true; sz = 12.f; 
@@ -115,7 +121,7 @@ namespace RBX
 
 			virtual void render(RenderDevice* d);
 			virtual bool mouseIn(Vector2 mosPos);
-			virtual void handleMouse(UserInput* ui);
+			virtual void handleMouse(G3D::UserInput* ui);
 		};
 
 		class GuiLabel : public GuiObject
@@ -152,7 +158,7 @@ namespace RBX
 		public:
 			GFontRef font;
 			void render(RenderDevice* d);
-			void doButtonLogic(UserInput* ui, RenderDevice* d);
+			void doButtonLogic(G3D::UserInput* ui, RenderDevice* d);
 			void add(GuiObject* obj) { objects.push_back(obj); }
 			GuiRoot() { font = GFont::fromFile(GetFileInPath("/content/font/comics.fnt")); }
 		};

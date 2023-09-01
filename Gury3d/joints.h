@@ -36,6 +36,7 @@ namespace RBX
 		CoordinateFrame c0, c1;
 
 		JointType type;
+		bool isCreated;
 
 		virtual void breakJoint() {};
 		virtual void createJoint() {};
@@ -50,6 +51,8 @@ namespace RBX
 			type = JointType::None;
 			part0 = 0;
 			part1 = 0;
+			isCreated = 0;
+			constraint = 0;
 			setClassName("Joint");
 			setName("Joint");
 		}

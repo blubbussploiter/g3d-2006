@@ -1,10 +1,11 @@
+#ifndef CAMERA_H
+#define CAMERA_H
+
 /* I am shit at math and whatever this is, so I took most of the code from https://github.com/Vulpovile/Blocks3D/blob/0b8847cd8e7d5726870e9f65c558872e0eaf477e/src/source/CameraController.cpp */
 
 #include <G3DAll.h>
 
-#include "rbx.h"
-#include "render_shapes.h"
-#include "runservice.h"
+#include "pvinstance.h"
 #include "controller.h"
 #include "part.h"
 
@@ -34,7 +35,6 @@ namespace RBX
 		bool isInFirstPerson;
 
 		RBX::PartInstance* focusPart;
-		static RenderDevice* rd;
 
 		Vector3 focusPosition;
 		Vector3 translation;
@@ -67,8 +67,10 @@ namespace RBX
 
 		void cam_zoom(bool inout);
 
-		void update(Rendering::G3DApp* app);
+		void update(UserInput* input);
+
 		void setCamera(GCamera* c) { camera = c; }
+		GCamera* getCamera() { return camera; }
 
 		float getLerp() { return 0.49999998f; }
 
@@ -76,13 +78,16 @@ namespace RBX
 		void zoomExtents();
 		void zoomExtents(RBX::Extents extents);
 
-		static void cameraInit(GCamera* __camera, RenderDevice* rd);
 		static RBX::Camera* singleton();
 		
 		Camera() : focusPosition(Vector3(0, 0, 0)), yaw(0.f), pitch(0.f), zoom(14.f) 
 		{
 			setSpeed(2.4f);
 			cameraType = CameraType::Fixed;
+			focusPart = 0;
+			isInFirstPerson = 0;
+			isUsingRightMouse = 0;
+			isZooming = 0;
 			setClassName("Camera");
 			setName("Camera");
 		}
@@ -90,3 +95,5 @@ namespace RBX
 		virtual ~Camera() {}
 	};
 }
+
+#endif

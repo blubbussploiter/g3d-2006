@@ -1,5 +1,5 @@
 #include "snaps.h"
-#include "render_shapes.h"
+#include "pvinstance.h"
 #include "jointservice.h"
 #include "runservice.h"
 #include "stdout.h"
@@ -84,22 +84,24 @@ void RBX::SnapJoint::createJoint()
 	center0 = ToTransform(part0->getCFrame());
 	center1 = ToTransform(part1->getCFrame());
 
-	RBX::StandardOut::print(RBX::MESSAGE_INFO, "Snapped '%s' and '%s'", part0->getName().c_str(), part1->getName().c_str());
-
 	if (snap0)
 	{
 		_shape = snap0->_shape;
+		_body = snap0->_body;
 		if (snap1)
 		{
 			snap1->_shape = _shape;
+			snap1->_body = _body;
 		}
 	}
 	if (snap1)
 	{
 		_shape = snap1->_shape;
+		_body = snap1->_body;
 		if (snap0)
 		{
 			snap0->_shape = _shape;
+			snap0->_body = _body;
 		}
 	}
 	if (!_shape)
@@ -110,6 +112,8 @@ void RBX::SnapJoint::createJoint()
 	btVector3 bodyInertia;
 	int num;
 
+	isCreated = 1;
+
 	_world->removeRigidBody(part0->body->_body);
 	_world->removeRigidBody(part1->body->_body);
 
@@ -119,36 +123,26 @@ void RBX::SnapJoint::createJoint()
 	num = _shape->getNumChildShapes();
 	_shape->calculateLocalInertia(BODY_MASS * num, bodyInertia);
 
-	_body = new btRigidBody(BODY_MASS * num, new btDefaultMotionState(), _shape, bodyInertia);
+	if (!snap0 && !snap1)
+	{
+		_body = new btRigidBody(BODY_MASS * num, new btDefaultMotionState(), _shape, bodyInertia);
 
-	_body->setFriction(0.5f);
-	_body->setRestitution(0.0f);
+		_body->setFriction(0.5f * num);
+		_body->setRestitution(0.0f);
+	}
+	else
+	{
+		_world->removeRigidBody(_body);
+		_body->setCollisionShape(_shape);
+		_body->setMassProps(BODY_MASS * num, bodyInertia);
+		_body->updateInertiaTensor();
+	}
 
 	part0->body->connector = this;
 	part1->body->connector = this;
 
-	if (snap0)
-	{
-		_world->removeRigidBody(snap0->_body);
-		snap0->_body = _body;
-		snap0->part0->body->_body = _body;
-		snap0->part1->body->_body = _body;
-	}
-	if (snap1)
-	{
-		_world->removeRigidBody(snap1->_body);
-		snap1->_body = _body;
-		snap1->part0->body->_body = _body;
-		snap1->part1->body->_body = _body;
-	}
-
-	if (!snap0 && !snap1)
-	{
-		part0->body->_body = _body;
-		part1->body->_body = _body;
-	}
-
-	printf("# of shapes = %d\n", num);
+	part0->body->_body = _body;
+	part1->body->_body = _body;
 
 	_world->addRigidBody(_body);
 

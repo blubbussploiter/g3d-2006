@@ -1,11 +1,11 @@
 #include "mesh.h"
 #include "lighting.h"
 
-const Reflection::PropertyDescriptor<RBX::Render::Mesh, RBX::Render::MeshType> RBX::Render::Mesh::prop_meshType("MeshType", Reflection::Types::TYPE_Number, &RBX::Render::Mesh::getMeshType, &RBX::Render::Mesh::setMeshType, RBX::Render::Mesh::properties);
-const Reflection::PropertyDescriptor<RBX::Render::Mesh, Vector3> RBX::Render::Mesh::prop_meshScale("Scale", Reflection::Types::TYPE_Vector3, &RBX::Render::Mesh::getMeshScale, &RBX::Render::Mesh::setMeshScale, RBX::Render::Mesh::properties);
-const Reflection::PropertyDescriptor<RBX::Render::Mesh, RBX::Content> RBX::Render::Mesh::prop_meshId("MeshId", Reflection::Types::TYPE_Content, &RBX::Render::Mesh::getMeshId, &RBX::Render::Mesh::setMeshId, RBX::Render::Mesh::properties);
+const Reflection::PropertyDescriptor<RBX::Render::SpecialMesh, RBX::Render::MeshType> RBX::Render::SpecialMesh::prop_meshType("MeshType", Reflection::Types::TYPE_Number, &RBX::Render::SpecialMesh::getMeshType, &RBX::Render::SpecialMesh::setMeshType, RBX::Render::SpecialMesh::properties);
+const Reflection::PropertyDescriptor<RBX::Render::SpecialMesh, Vector3> RBX::Render::SpecialMesh::prop_meshScale("Scale", Reflection::Types::TYPE_Vector3, &RBX::Render::SpecialMesh::getMeshScale, &RBX::Render::SpecialMesh::setMeshScale, RBX::Render::SpecialMesh::properties);
+const Reflection::PropertyDescriptor<RBX::Render::SpecialMesh, RBX::Content> RBX::Render::SpecialMesh::prop_meshId("MeshId", Reflection::Types::TYPE_Content, &RBX::Render::SpecialMesh::getMeshId, &RBX::Render::SpecialMesh::setMeshId, RBX::Render::SpecialMesh::properties);
 
-void RBX::Render::Mesh::fromFile(std::string path)
+void RBX::Render::SpecialMesh::fromFile(std::string path)
 {
 	FILE* f = fopen(path.c_str(), "r");
 
@@ -32,19 +32,21 @@ void RBX::Render::Mesh::fromFile(std::string path)
 	}
 	
 	fclose(f);
+
+	num_faces = faces * 3;
 	meshId = Content(path);
 }
 
-void RBX::Render::Mesh::fromMeshType(MeshType types)
+void RBX::Render::SpecialMesh::fromMeshType(MeshType types)
 {
 	setMeshType(types);
 }
 
-void RBX::Render::Mesh::setMeshId(Content meshId)
+void RBX::Render::SpecialMesh::setMeshId(Content SpecialMeshId)
 {
 	std::string contentPath;
 
-	RBX::ContentProvider::singleton()->downloadContent(meshId, contentPath);
+	RBX::ContentProvider::singleton()->downloadContent(SpecialMeshId, contentPath);
 
 	if (contentPath.empty()) return;
 
@@ -54,10 +56,10 @@ void RBX::Render::Mesh::setMeshId(Content meshId)
 
 	fromFile(contentPath);
 
-	RBX::ContentProvider::singleton()->cleanupContent(meshId);
+	RBX::ContentProvider::singleton()->cleanupContent(SpecialMeshId);
 }
 
-void RBX::Render::Mesh::renderDecals()
+void RBX::Render::SpecialMesh::renderDecals(RenderDevice* rd)
 {
 	RBX::Instances* children;
 	children = getParent()->getChildren();
@@ -67,79 +69,39 @@ void RBX::Render::Mesh::renderDecals()
 		if (child->getClassName() == "Decal")
 		{
 			RBX::Decal* d = (RBX::Decal*)child;
-			d->render(this);
+			d->render(rd, this);
 		}
 	}
 }
 
-void RBX::Render::Mesh::render(RenderDevice* d)
+void RBX::Render::SpecialMesh::render(RenderDevice* d)
 {
-
-	RBX::PVInstance* parent;
-	CoordinateFrame cframe;
-
-	if (getParent() && getParent()->getClassName() != "PVInstance")
-		return;
-
-	parent = (RBX::PVInstance*)getParent();
-	cframe = parent->getCFrame();
-
-	RBX::Lighting::singleton()->begin(d, 25.0f);
-	d->setObjectToWorldMatrix(cframe);
-
-	renderFace(RBX::FRONT);
-	renderDecals();
-
-	RBX::Lighting::singleton()->end(d);
-}
-
-void RBX::Render::Mesh::renderFace(RBX::NormalId face, bool isAlpha, bool isDrawingDecal)
-{
-	RBX::PVInstance* parent;
-	Color3 color;
-
-	float transparency;
-	float alpha = 1;
-
-	parent = (RBX::PVInstance*)getParent();
-	color = parent->getColor();
-
-	transparency = parent->getTransparency();
-
-	glEnable(GL_DEPTH_TEST);
-
-	if (transparency <= 1)
+	switch (meshType)
 	{
-		if (!isAlpha)
+		case Head:
 		{
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			alpha = (1 - transparency);
+			buildHeadMesh(mesh_scale);
+			break;
 		}
+		default: break;
 	}
+}
 
-	glColor4f(color.r, color.g, color.b, alpha);
-
+void RBX::Render::SpecialMesh::renderFace(RBX::NormalId face, bool isDrawingDecal)
+{
 	glBegin(GL_TRIANGLES);
 
-	for (int i = 0; i < faces * 3; ++i) 
+	for (int i = 0; i < num_faces; ++i) 
 	{
-		glNormal(normals[i] * mesh_scale);
+		glNormal(normals[i]);
 		glTexCoord(uvs[i]);
-		glVertex(vertices[i] * mesh_scale);
+		glVertex(vertices[i]);
 	}
 
 	glEnd();
+}
 
-	if (transparency <= 1)
-	{
-		if (!isAlpha)
-		{
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-			glDisable(GL_BLEND);
-		}
-	}
-
-	glDisable(GL_DEPTH_TEST);
+void RBX::Render::buildHeadMesh(Vector3 size)
+{
 
 }

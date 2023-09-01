@@ -1,7 +1,7 @@
 #ifndef RBX_MATH_H
 #define RBX_MATH_H
 #include <G3DAll.h>
-#include "render_shapes.h"
+#include "pvinstance.h"
 
 namespace RBX
 {

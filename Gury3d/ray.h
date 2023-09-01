@@ -30,6 +30,6 @@ namespace RBX
 				ignore = new RBX::Instances();
 			}
 		};
-		RBX::PVInstance* getPartFromG3DRay(G3D::Ray ray, RBX::Instances* ignore=0);
+		RBX::PVInstance* getPartFromG3DRay(G3D::Ray ray, Vector3& hitWorld, RBX::Instances* ignore=0);
 	}
 }

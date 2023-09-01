@@ -1,7 +1,6 @@
 #ifndef RIGHTKEYBOARD_H
 #define RIGHTKEYBOARD_H
 
-#include "controller.h"
 #include "keyboard.h"
 
 namespace RBX

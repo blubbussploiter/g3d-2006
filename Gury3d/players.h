@@ -8,7 +8,7 @@
 
 #include "backpack.h"
 
-namespace RBX /* change this to RBX::Network (maybe) */
+namespace RBX
 {
 	namespace Network
 	{
@@ -39,6 +39,8 @@ namespace RBX /* change this to RBX::Network (maybe) */
 				setClassName("Players");
 				setName("Players");
 				isParentLocked = 1;
+				playerList = 0;
+				localPlayer = 0;
 			}
 		};
 
@@ -85,6 +87,11 @@ namespace RBX /* change this to RBX::Network (maybe) */
 				setClassName("Player");
 				setName("Player");
 				backpack = new RBX::Backpack();
+				activeBin = 0;
+				controller = 0;
+				character = 0;
+				guiName = 0;
+				userId = 0;
 			}
 			~Player()
 			{

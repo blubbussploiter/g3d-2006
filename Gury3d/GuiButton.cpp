@@ -37,7 +37,7 @@ void RBX::Gui::GuiButton::render(RenderDevice* d)
 	singleton()->font->draw2D(d, title, right, sz, textColor);
 }
 
-void RBX::Gui::GuiButton::handleMouse(UserInput* ui)
+void RBX::Gui::GuiButton::handleMouse(G3D::UserInput* ui)
 {
 	Vector2 mousePos;
 

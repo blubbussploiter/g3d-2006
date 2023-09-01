@@ -151,9 +151,14 @@ static Color3 getLegoColor(short bc)
 	}
 }
 
-Color3 RBX::BrickColor::getColor()
+Color3* RBX::BrickColor::getColor()
 {
-	return getLegoColor(number);
+	if (!color)
+	{
+		Color3 lego = getLegoColor(number);
+		color = new Color3(lego.r, lego.g, lego.b);
+	}
+	return color;
 }
 
 RBX::BrickColor* RBX::BrickColor::fromNumber(int number)

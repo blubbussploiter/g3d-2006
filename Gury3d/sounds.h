@@ -7,6 +7,9 @@
 #include <vector>
 #include <string>
 
+#pragma comment(lib, "fmod_vc.lib")
+#pragma comment(lib, "fmodstudio_vc.lib")
+
 namespace RBX
 {
 	class Sound : RBX::Instance
@@ -36,9 +39,9 @@ namespace RBX
 			RBX::Sound* s = new RBX::Sound();
 			s->soundPath = file;
 			s->isLooping = isLooped;
+			s->volume = 1.0f;
 			return s;
 		}
-		Sound() { volume = 1.0f; }
 		virtual ~Sound() { sound->release(); }
 	};
 

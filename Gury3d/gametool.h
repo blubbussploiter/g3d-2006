@@ -2,7 +2,7 @@
 #define GAMETOOL_H
 
 #include "hopperbin.h"
-#include "render_shapes.h"
+#include "pvinstance.h"
 
 namespace RBX
 {
@@ -11,14 +11,14 @@ namespace RBX
 	private:
 		RBX::PVInstance* dragged;
 		Vector3 lastPosition;
-		btVector3 lastAngularVelocity, lastLinearVelocity;
 	public:
-		void update(RenderDevice* rd, UserInput* ui);
+		void update(RenderDevice* rd, G3D::UserInput* ui);
 		void deactivate();
 		void activate();
 		GameTool()
 		{
 			binType = GAMETOOL_BIN;
+			dragged = 0;
 		}
 	};
 }

@@ -2,7 +2,6 @@
 #define KEYBOARD_H
 
 #include "controller.h"
-#include "keyboard.h"
 
 namespace RBX
 {
@@ -15,7 +14,7 @@ namespace RBX
 		void move();
 
 		void mv_update();
-		void handleInput(UserInput* ui);
+		void handleInput(G3D::UserInput* ui);
 
 		void moveCharacter(RBX::Instance* character);
 		void bindCharacter(RBX::Instance* character);

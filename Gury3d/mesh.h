@@ -3,7 +3,7 @@
 #define MESH_H
 
 #include "pvenums.h"
-#include "render_shapes.h"
+#include "pvinstance.h"
 
 #include "content.h"
 
@@ -11,6 +11,7 @@ namespace RBX
 {
 	namespace Render
 	{
+		extern void buildHeadMesh(Vector3 size);
 
 		enum MeshType
 		{
@@ -23,7 +24,7 @@ namespace RBX
 			Brick
 		};
 
-		class Mesh : public RBX::PVInstance
+		class SpecialMesh : public RBX::PVInstance
 		{
 		private:
 			Content meshId;
@@ -33,13 +34,15 @@ namespace RBX
 			Vector3 mesh_scale;
 			MeshType meshType;
 			int faces;
+			int num_faces;
 		public:
 
-			static const Reflection::PropertyDescriptor<Mesh, MeshType> prop_meshType;
-			static const Reflection::PropertyDescriptor<Mesh, Vector3> prop_meshScale;
-			static const Reflection::PropertyDescriptor<Mesh, Content> prop_meshId;
+			static const Reflection::PropertyDescriptor<SpecialMesh, MeshType> prop_meshType;
+			static const Reflection::PropertyDescriptor<SpecialMesh, Vector3> prop_meshScale;
+			static const Reflection::PropertyDescriptor<SpecialMesh, Content> prop_meshId;
 
 			MeshType getMeshType() { return meshType; }
+
 			void setMeshType(int m) 
 			{
 				meshType = (MeshType)m;
@@ -54,7 +57,10 @@ namespace RBX
 				}
 			}
 
-			void setMeshScale(Vector3 scale) { mesh_scale = scale * 1.7f; }
+			void setMeshScale(Vector3 scale)
+			{
+				mesh_scale = scale;
+			}
 			Vector3 getMeshScale() { return mesh_scale; }
 
 			void fromFile(std::string path);
@@ -63,17 +69,18 @@ namespace RBX
 			void setMeshId(Content meshId);
 			Content getMeshId() { return meshId; }
 
-			void renderDecals();
+			void renderDecals(RenderDevice* d);
 			void render(RenderDevice* d);
 
-			void renderFace(RBX::NormalId face, bool isAlpha=0, bool isDrawingDeca=0);
-			Mesh()
+			void renderFace(RBX::NormalId face, bool isDrawingDecal=0);
+			SpecialMesh()
 			{
 				setClassName("SpecialMesh");
 				setName("SpecialMesh");
 				mesh_scale = Vector3::one();
+				isSpecialShape = true;
 			}
-			virtual ~Mesh() {}
+			virtual ~SpecialMesh() {}
 		};
 	}
 }

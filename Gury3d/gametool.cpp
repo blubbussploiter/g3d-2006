@@ -4,6 +4,8 @@
 #include "selection.h"
 #include "ray.h"
 
+TextureRef dragCursor, grabRotateCursor;
+
 float getOccludingY(RBX::PVInstance* p)
 {
 	RBX::PVInstance* target;
@@ -11,16 +13,13 @@ float getOccludingY(RBX::PVInstance* p)
 	if (target && (target != p))
 	{ 
 		float y;
-		if (RBX::getAxisOnUpVector(p))
-			y = p->getSize().y;
-		else
-			y = ceil(p->getSize().z / 2) + 1.2;
+		y = ceil(p->getSize().z / 2) + 1.2;
 		return target->getPosition().y + y;
 	}
 	return p->getPosition().y;
 }
 
-void RBX::GameTool::update(RenderDevice* rd, UserInput* ui)
+void RBX::GameTool::update(RenderDevice* rd, G3D::UserInput* ui)
 {
 	RBX::PVInstance* pv = RBX::Selection::selection, *i;
 	Vector3 vec, hit, pos;
@@ -32,16 +31,15 @@ void RBX::GameTool::update(RenderDevice* rd, UserInput* ui)
 		{
 			if (dragged->body && dragged->body->_body)
 			{
-				dragged->body->_body->setLinearVelocity(lastLinearVelocity);
-				dragged->body->_body->setAngularVelocity(lastAngularVelocity);
+				dragged->body->_body->setActivationState(1);
 			}
 			dragged = 0;
 		}
 		if (active)
 		{
 			if (!i || (i && i->getLocked())) Rendering::cursor_custom = 0;
-			if(i && !i->getLocked())
-				Rendering::cursor_custom = Texture::fromFile(GetFileInPath("/content/textures/DragCursor.png"));
+			if (i && !i->getLocked())
+				Rendering::cursor_custom = dragCursor;
 		}
 		return;
 	}
@@ -82,33 +80,20 @@ void RBX::GameTool::update(RenderDevice* rd, UserInput* ui)
 
 		if (ui->keyReleased(SDLK_t))
 		{
-			//float g3dRot[12] = g3d2ode((pv->getCFrame() * Matrix3::fromEulerAnglesXYZ(0, 0, toRadians(90))).rotation);
-			//dGeomSetRotation(pv->body->geom[0], g3dRot);
+			
 		}
 
 		if (ui->keyReleased(SDLK_r))
 		{
-			//float g3dRot[12] = g3d2ode((pv->getCFrame() * Matrix3::fromEulerAnglesXYZ(0, toRadians(90), 0)).rotation);
-			//dGeomSetRotation(pv->body->geom[0], g3dRot);
+
 		}
 
 		lastPosition = vec;
 		dragged = pv;
 
-		//lastLinVel = (dReal*)dBodyGetLinearVel(dragged->body->body);
-		//lastAngVel = (dReal*)dBodyGetAngularVel(dragged->body->body);
+		dragged->body->_body->setActivationState(0);
 
-		lastLinearVelocity = dragged->body->_body->getLinearVelocity();
-		lastAngularVelocity = dragged->body->_body->getAngularVelocity();
-
-		if (lastLinearVelocity != btVector3(0,0,0) &&
-			lastAngularVelocity != btVector3(0, 0, 0))
-		{
-			dragged->body->_body->setLinearVelocity(btVector3(0, 0, 0));
-			dragged->body->_body->setAngularVelocity(btVector3(0, 0, 0));
-		}
-
-		Rendering::cursor_custom = Texture::fromFile(GetFileInPath("/content/textures/GrabRotateCursor.png"));
+		Rendering::cursor_custom = grabRotateCursor;
 	}
 }
 
@@ -121,10 +106,10 @@ void RBX::GameTool::deactivate()
 	if (dragged)
 	{
 		RBX::Selection::selection = 0;
-		if (dragged->body && dragged->body->_body)
+		if (dragged->body && 
+			dragged->body->_body)
 		{
-			dragged->body->_body->setLinearVelocity(lastLinearVelocity);
-			dragged->body->_body->setAngularVelocity(lastAngularVelocity);
+			dragged->body->_body->setActivationState(1);
 		}
 		dragged = 0;
 	}
@@ -133,7 +118,15 @@ void RBX::GameTool::deactivate()
 	
 }
 
-void RBX::GameTool::activate()
+void RBX::GameTool::activate() /* g3d doesnt like static TextureRefs */
 {
 	RBX::Selection::canSelect = 1;
+	if (dragCursor.isNull())
+	{
+		dragCursor = Texture::fromFile(GetFileInPath("/content/textures/DragCursor.png"));
+	}
+	if (grabRotateCursor.isNull())
+	{
+		grabRotateCursor = Texture::fromFile(GetFileInPath("/content/textures/GrabRotateCursor.png"));
+	}
 }

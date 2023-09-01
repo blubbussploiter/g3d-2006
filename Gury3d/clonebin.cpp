@@ -5,12 +5,16 @@
 #include "ray.h"
 
 RBX::Sound* ping = RBX::Sound::fromFile(GetFileInPath("/content/sounds/electronicpingshort.wav"));
+TextureRef cloneCursor, cloneOver, cloneDown;
+
 RBX::PVInstance* lastClone, *lastSelection;
 
-void RBX::CloneBin::update(RenderDevice* rd, UserInput* ui)
+void RBX::CloneBin::update(RenderDevice* rd, G3D::UserInput* ui)
 {
-	if (RBX::Selection::selection && RBX::Selection::clicked)
+	if (RBX::Selection::clicked)
 	{
+		if (!RBX::Selection::selection) return;
+
 		RBX::PVInstance* clone = static_cast<RBX::PVInstance*>(RBX::Selection::selection->clone());
 		Vector3 p;
 
@@ -33,7 +37,7 @@ void RBX::CloneBin::update(RenderDevice* rd, UserInput* ui)
 
 		ping->play();
 
-		Rendering::cursor_custom = Texture::fromFile(GetFileInPath("/content/textures/CloneDownCursor.png"));
+		Rendering::cursor_custom = cloneDown;
 	}
 	else
 	{
@@ -41,10 +45,14 @@ void RBX::CloneBin::update(RenderDevice* rd, UserInput* ui)
 		i = RBX::Mouse::getTarget();
 		if (active)
 		{
-			if(!i || (i && i->getLocked()))
-				Rendering::cursor_custom = Texture::fromFile(GetFileInPath("/content/textures/CloneCursor.png"));
+			if (!i || (i && i->getLocked()))
+			{
+				Rendering::cursor_custom = cloneCursor;
+			}
 			else
-				Rendering::cursor_custom = Texture::fromFile(GetFileInPath("/content/textures/CloneOverCursor.png"));
+			{
+				Rendering::cursor_custom = cloneOver;
+			}
 		}
 	}
 
@@ -53,6 +61,9 @@ void RBX::CloneBin::update(RenderDevice* rd, UserInput* ui)
 void RBX::CloneBin::activate()
 {
 	RBX::Selection::canSelect = 1;
+	if (cloneCursor.isNull()) cloneCursor = Texture::fromFile(GetFileInPath("/content/textures/CloneCursor.png"));
+	if (cloneDown.isNull()) cloneDown = Texture::fromFile(GetFileInPath("/content/textures/CloneDownCursor.png"));
+	if (cloneOver.isNull()) cloneOver = Texture::fromFile(GetFileInPath("/content/textures/CloneOverCursor.png"));
 }
 
 void RBX::CloneBin::deactivate()

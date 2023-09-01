@@ -28,16 +28,21 @@ namespace RBX
 		btDiscreteDynamicsWorld* _world;
 
 		void update();
+
 		void init();
 		void close();
+
 		void checkBodies(RBX::Instances* PVInstances);
 		void createBody(RBX::PVInstance* part);
+
 		void removeBody(RBX::PVInstance* part);
 		void resetBody(RBX::PVInstance* part);
+
 		void updateBody(RBX::PVInstance* part);
 		void updateBodyCFrame(CoordinateFrame cf, RBX::PVInstance* p);
 		void updateAnchor(RBX::PVInstance* part);
 
+		bool isTouching(RBX::PVInstance* part, bool ignoreSiblings=0);
 		bool areColliding(RBX::PVInstance* part1, RBX::PVInstance* part2);
 
 		int getNumberOfGeoms() {
@@ -71,6 +76,7 @@ namespace RBX
 	{
 	private:
 		XplicitNgine* physics;
+		RBX::Instances* steppers;
 	public:
 		bool isRunning;
 		void run();
@@ -78,13 +84,15 @@ namespace RBX
 		void reset();
 		void update();
 		void heartbeat();
-		void updateSteppers(RBX::Instances* steppers);
+		void updateSteppers();
+		void workspaceOnDescendentAdded(RBX::Instance* descendent);
 		XplicitNgine* getPhysics() { return physics; }
 		/* deprecated, use Datamodel->runService */
 		static RunService* singleton();
 		RunService()
 		{
 			isRunning = 0;
+			steppers = new RBX::Instances();
 			physics = new XplicitNgine();
 			physics->init();
 		}

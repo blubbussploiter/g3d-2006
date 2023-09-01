@@ -31,41 +31,90 @@ bool RBX::Instance::isAncestorOf(RBX::Instance* descendant)
 	return 1;
 }
 
-void RBX::Instance::remove()
+bool RBX::Instance::contains(const RBX::Instance* child)
 {
-	if (isParentLocked) return;
-	if (parent)
+	const RBX::Instance* v2; // eax
+
+	v2 = child;
+	if (!child)
+		return 0;
+	while (v2 != this)
 	{
-		if (std::find(parent->getChildren()->begin(), parent->getChildren()->end(), this) != parent->getChildren()->end())
-			parent->getChildren()->erase(std::remove(parent->getChildren()->begin(), parent->getChildren()->end(), this));
+		v2 = v2->parent;
+		if (!v2)
+			return 0;
 	}
-	for (RBX::Instance* i : *getChildren())
-		i->remove();
-	pageTurn->setVolume(0.2f);
-	pageTurn->play();
-	onRemove();
+	return 1;
+}
+
+void RBX::Instance::signalOnDescendentAdded(RBX::Instance* beginParent, RBX::Instance* child)
+{
+	RBX::Instance* i;
+	RBX::Instances* c;
+
+	c = child->getChildren();
+
+	for (i = beginParent; i; i = i->parent)
+	{
+		i->onDescendentAdded(child);
+	}
+
+	for (unsigned int i = 0; i < c->size(); i++)
+	{
+		RBX::Instance* in = c->at(i);
+		child->signalOnDescendentAdded(child, in);
+	}
 }
 
 void RBX::Instance::setParent(Instance* instance)
 {
+	RBX::Instance* oldParent;
+	oldParent = parent;
+
 	if (isParentLocked)
-		return; // Throw an exception later
-	if (parent) // Parent already exists, remove this from its childrens
+		return;
+	if (oldParent)
 	{
-		if(std::find(parent->getChildren()->begin(), parent->getChildren()->end(), this) != parent->getChildren()->end())
+		if (std::find(parent->getChildren()->begin(), parent->getChildren()->end(), this) != parent->getChildren()->end())
 			parent->getChildren()->erase(std::remove(parent->getChildren()->begin(), parent->getChildren()->end(), this));
 	}
 	parent = instance;
-	if (parent) // Add this to parent children
+
+	if (parent)
 	{
 		parent->children->push_back(this);
+		parent->onChildAdded(this);
+
+		if (!parent->contains(oldParent))
+			parent->signalOnDescendentAdded(parent, this);
 	}
+}
+
+void RBX::Instance::remove()
+{
+
+	if (isParentLocked) return;
+
+	for (RBX::Instance* i : *children)
+	{
+		i->remove();
+	}
+
+	if (parent)
+	{
+		if (std::find(parent->children->begin(), parent->children->end(), this) != parent->children->end())
+		{
+			parent->children->erase(std::remove(parent->children->begin(), parent->children->end(), this));
+		}
+	}
+
+	pageTurn->play();
+
+	onRemove();
 }
 
 Instance* RBX::Instance::getParent()
 {
-	//if (parent == NULL)
-	//	return getRootInstance();
 	return parent;
 }
 

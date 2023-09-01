@@ -1,10 +1,23 @@
-#include "rbx.h"
-#include "crashreporter.h"
-#include "strings.h"
+//#include "rbx.h"
+
+//#include "crashreporter.h"
+//#include "strings.h"
+
+//#include "CStudioMainWindow.h"
+
+#include <thread>
+
+#include "3DStudio.h"
+#include "3DStudioView.h"
 
 int main()
 {
-	RBX::CrashReporter::singleton()->start();
+
+	//CStudioApp* studio;
+	//studio = new CStudioApp();
+
+	//RBX::CrashReporter::singleton()->start();
+	/*
 
 	GAppSettings settings;
 
@@ -18,5 +31,18 @@ int main()
 	app.debugController.setActive(false);
 
 	app.run();
+	*/
+
+	if (!AfxWinInit(::GetModuleHandle(NULL), NULL, ::GetCommandLine(), 1))
+	{
+		_tprintf(_T("Fatal Error: MFC initialization failed\n"));
+		return 1;
+	}
+
+	theApp.InitApplication();
+	theApp.InitInstance();
+
+	theApp.Run();
+
 	return 0;
 }

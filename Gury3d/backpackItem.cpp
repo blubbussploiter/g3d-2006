@@ -167,7 +167,7 @@ void RBX::onClickFn(RBX::Gui::GuiButton* b) /* move this to Backpack::activateBi
 	}
 }
 
-void RBX::BackpackItem::handleMouse(UserInput* ui)
+void RBX::BackpackItem::handleMouse(G3D::UserInput* ui)
 {
 	RBX::Gui::GuiButton::handleMouse(ui);
 }

@@ -24,7 +24,7 @@ RBX::Instance* RBX::fromName(std::string className)
 
 	if (className == "SpecialMesh")
 	{
-		return new RBX::Render::Mesh();
+		return new RBX::Render::SpecialMesh();
 	}
 
 	if(className == "Humanoid")

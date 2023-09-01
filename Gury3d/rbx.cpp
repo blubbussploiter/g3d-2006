@@ -28,111 +28,73 @@
 
 #pragma comment(lib, "fmod_vc.lib")
 
-Rendering::G3DApp* Rendering::global_app = 0;
+RBX::G3DApp* RBX::global_app = 0;
 
-void Rendering::G3DApplet::onSimulation(RealTime rdt, SimTime sdt, SimTime idt)
+void RBX::G3DApplet::onSimulation(RealTime rdt, SimTime sdt, SimTime idt)
 {
-	RBX::SoundService::singleton()->update();
 	RBX::Datamodel::getDatamodel()->step();
+	RBX::SoundService::singleton()->update();
+	RBX::Camera::singleton()->update(app);
 }
 
-void Rendering::G3DApplet::doGraphics()
+void RBX::G3DApplet::doGraphics()
 {
-	/* update physics per render.. yada yada */
 
 	app->renderDevice->clear();
-
-	RBX::Camera::singleton()->update(app);
 	app->renderDevice->setProjectionAndCameraMatrix(app->debugCamera);
 
 	app->renderDevice->setShadeMode(RenderDevice::ShadeMode::SHADE_SMOOTH);
 	sky->render(RBX::Lighting::singleton()->getParameters());
 
-	RBX::Datamodel::getDatamodel()->runService->getPhysics()->_world->debugDrawWorld();
 	RBX::Selection::renderSelection(app->renderDevice);
-
-	RBX::Datamodel::getDatamodel()->workspace->render(app->renderDevice);
-
-	//if(!RBX::Datamodel::getDatamodel()->runService->isRunning)
-	//	RBX::Datamodel::getDatamodel()->workspace->render(app->renderDevice);
+	RBX::View::singleton()->render(app->renderDevice);
 
 	RBX::Network::getPlayers()->updatePlayerList();
+
+	app->renderDevice->push2D();
 
 	RBX::Datamodel::getDatamodel()->guiRoot->render(app->renderDevice);
 	Rendering::renderCursor(app->userInput, app->renderDevice);
 
-	sky->renderLensFlare(RBX::Lighting::singleton()->getParameters());
+	app->renderDevice->pop2D();
 
-	if (RBX::Network::getPlayers()->localPlayer)
-	{
-		RBX::Network::getPlayers()->localPlayer->backpack->updateGui(app->renderDevice, app->userInput);
-	}
+	sky->renderLensFlare(RBX::Lighting::singleton()->getParameters());
 }
 
-void Rendering::G3DApplet::doLogic()
+void RBX::G3DApplet::doLogic()
 {
 	UserInput* ui;
 	ui = app->userInput;
 
 	if (ui->keyPressed(SDLK_o))
+	{
 		RBX::Camera::singleton()->cam_zoom(0);
-	if(ui->keyPressed(SDLK_i))
-		RBX::Camera::singleton()->cam_zoom(1); 
-
-	if (ui->keyPressed(SDLK_F1))
-		if(!RBX::RunService::singleton()->isRunning)
-			RBX::RunService::singleton()->run();
-		else
-			RBX::RunService::singleton()->stop();
+	}
+	if (ui->keyPressed(SDLK_i))
+	{
+		RBX::Camera::singleton()->cam_zoom(1);
+	}
 
 	if (ui->appHasFocus())
 	{
-		ui->window()->setMouseVisible(0);
 		RBX::Gui::singleton()->doButtonLogic(ui, app->renderDevice);
-
 		RBX::updateControllers(app->userInput);
-
-		hook_mouse();
-	}
-	else
-		ui->window()->setMouseVisible(1);
-
-	if (RBX::Network::getPlayers() && RBX::Network::getPlayers()->localPlayer)
-	{
-		RBX::Network::Player* plr = RBX::Network::getPlayers()->localPlayer;
-
-		plr->backpack->keypress(ui);
-		RBX::Mouse::update(app->userInput->getMouseX(), app->userInput->getMouseY());
-
-		if (ui->keyPressed(SDLK_BACKSPACE))
-			plr->disposeActiveBin();
-
-		if (plr->character)
-		{
-			if (ui->keyPressed(SDLK_ESCAPE))
-				plr->character->breakJoints();
-
-			plr->setAsController();
-		}
-
-		if (plr->activeBin)
-			plr->activeBin->update(app->renderDevice, app->userInput);
 	}
 
 	RBX::Selection::update(app->userInput);
 
-	app->userInput->window()->setCaption(RBX::Format("Gury3d - FPS: %g, Geoms: %d, Constraints: %d", app->renderDevice->getFrameRate(), RBX::RunService::singleton()->getPhysics()->getNumberOfGeoms(), RBX::RunService::singleton()->getPhysics()->getNumberOfConstraints()));
 }
 
-void Rendering::G3DApp::main()
+void RBX::G3DApp::main()
 {
 
 	RBX::Camera::cameraInit(&debugCamera, renderDevice);
+	RBX::initSurfaces();
+
 	RBX::addController(RBX::Camera::singleton());
 
 	RBX::RunService::singleton();
-
-	Rendering::global_app = this;
+	RBX::SoundService::singleton()->init();
 
 	RBX::Gui::GuiList* playerList;
 
@@ -236,58 +198,10 @@ void Rendering::G3DApp::main()
 	RBX::Gui::singleton()->add(zoomInBtn);
 	RBX::Gui::singleton()->add(zoomOutBtn);
 
-	GLDebugDrawer* d = new GLDebugDrawer();
-	d->setDebugMode(btIDebugDraw::DBG_MAX_DEBUG_DRAW_MODE);
-
-	RBX::Datamodel::getDatamodel()->runService->getPhysics()->_world->setDebugDrawer(d);
-
 	RBX::Network::getPlayers()->setPlayerList(playerList);
-	RBX::Network::getPlayers()->createLocalPlayer(0);
-	//RBX::Network::getPlayers()->localPlayer->setName("Player0");
 
-	//RBX::Datamodel::getDatamodel()->runService->run();
-	//RBX::Network::getPlayers()->localPlayer->loadCharacter();
-	//(new RBX::CloneBin())->setParent(RBX::Network::getPlayers()->localPlayer->backpack);
-	//(new RBX::GameTool())->setParent(RBX::Network::getPlayers()->localPlayer->backpack);
+	applet = new G3DApplet(this);
+	applet->setDesiredFrameRate(30);
+	applet->run();
 
-	//RBX::Serializer::load(GetFileInPath("/sunset.rbxl"));
-	//RBX::Serializer::load("D:\\pirate.rbxl");
-	//RBX::Serializer::load("D:\\sh3.rbxl");
-	//RBX::Serializer::load("D:\\hauntedmound.rbxl");
-	//RBX::Serializer::load("D:\\hauntedmound.rbxl");
-	//RBX::Datamodel::getDatamodel()->loadContent("D:\\829.rbxmx");
-	//RBX::Datamodel::getDatamodel()->loadContent("D:\\sharkrock.rbxl");
-	//RBX::Datamodel::getDatamodel()->loadContent("D:\\horsey.rbxl");
-	//RBX::Datamodel::getDatamodel()->loadContent("D:\\crossroads.rbxl");
-	//RBX::Datamodel::getDatamodel()->loadContent("D:\\sh3.rbxl");
-	//RBX::Datamodel::getDatamodel()->loadContent(GetFileInPath("/g3dplace.rbxl"));
-	//RBX::Datamodel::getDatamodel()->loadContent("D:\\bullet-test.rbxl");
-	//RBX::Datamodel::getDatamodel()->loadContent("D:\\chaos.rbxlx");
-	//RBX::Datamodel::getDatamodel()->loadContent("D:\\g3dplace.rbxl");
-	//RBX::Datamodel::getDatamodel()->loadContent("D:\\pirate.rbxl");
-	//RBX::Datamodel::getDatamodel()->loadContent("D:\\inhalf.rbxl");
-	//RBX::Datamodel::getDatamodel()->loadContent("D:\\hq.rbxl");
-	//RBX::Datamodel::getDatamodel()->loadContent("D:\\erik.rbxl");
-	//RBX::Datamodel::getDatamodel()->loadContent("D:\\The-Divide.rbxlx");
-	//RBX::Datamodel::getDatamodel()->loadContent("D:\\guy.rbxl");
-	//RBX::Datamodel::getDatamodel()->loadContent("D:\\blank.rbxl");
-	//RBX::Datamodel::getDatamodel()->loadContent("D:\\bullet-test.rbxl");
-	//RBX::Datamodel::getDatamodel()->loadContent("D:\\crossroads.rbxl");
-	RBX::Datamodel::getDatamodel()->loadContent("D:\\blank.rbxl");
-	//RBX::Datamodel::getDatamodel()->loadContent("D:\\Alexstrandlegos-house.rbxlx");
-	//RBX::Datamodel::getDatamodel()->loadContent("D:\\Sunset Plain.rbxl");
-	//RBX::Datamodel::getDatamodel()->loadContent("D:\\mountain.rbxl");
-	//RBX::Datamodel::getDatamodel()->loadContent("D:\\multiplier.rbxl");
-	//RBX::Datamodel::getDatamodel()->loadContent("D:\\hauntedmound.rbxl");
-	//RBX::Datamodel::getDatamodel()->loadContent("D:\\osaka.rbxl");
-	//RBX::Datamodel::getDatamodel()->loadContent("D:\\osaka.rbxl");
-	//RBX::Datamodel::getDatamodel()->loadContent("D:\\stairway.rbxl");
-
-	RBX::Camera::singleton()->zoomExtents();
-
-	//FreeConsole();
-
-	G3DApplet* a = new G3DApplet(this);
-	a->setDesiredFrameRate(30);
-	(a)->run();
 }

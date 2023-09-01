@@ -1,8 +1,7 @@
 #include "controller.h"
+#include "datamodel.h"
 
-std::vector<RBX::Controller*> controllers = std::vector<RBX::Controller*>();
-
-void RBX::Controller::handleInput(UserInput* ui)
+void RBX::Controller::handleInput(G3D::UserInput* ui)
 {
 
 	if (ui->keyDown(SDLK_w))
@@ -49,7 +48,7 @@ void RBX::Controller::handleInput(UserInput* ui)
 		isMoving = true;
 }
 
-void RBX::updateControllers(UserInput* ui)
+void RBX::ControllerService::updateControllers(G3D::UserInput* ui)
 {
 	for (unsigned int i = 0; i < controllers.size(); i++)
 	{
@@ -63,7 +62,12 @@ void RBX::updateControllers(UserInput* ui)
 	}
 }
 
-void RBX::addController(Controller* c)
+void RBX::ControllerService::addController(Controller* c)
 {
 	controllers.push_back(c);
+}
+
+RBX::ControllerService* RBX::ControllerService::singleton()
+{
+	return RBX::Datamodel::getDatamodel()->controllerService;
 }

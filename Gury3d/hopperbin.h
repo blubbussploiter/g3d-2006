@@ -25,7 +25,7 @@ namespace RBX
 		BinType binType;
 		bool active;
 
-		virtual void update(RenderDevice* rd, UserInput* ui) {}
+		virtual void update(RenderDevice* rd, G3D::UserInput* ui) {}
 		virtual void activate() {}
 		virtual void deactivate() {}
 		HopperBin()

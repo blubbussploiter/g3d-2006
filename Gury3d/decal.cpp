@@ -1,33 +1,30 @@
 #include "decal.h"
-#include "render_shapes.h"
+#include "pvinstance.h"
 
 //Reflection::PropertyDescriptor<RBX::Decal, RBX::Content> RBX::Decal::prop_texture("Texture", Reflection::TYPE_Content, &RBX::Decal::getTextureContent, &RBX::Decal::setTextureContent, RBX::Decal::properties);
 //Reflection::PropertyDescriptor<RBX::Decal, RBX::NormalId> RBX::Decal::prop_face("Face", Reflection::TYPE_Number, &RBX::Decal::getFace, &RBX::Decal::setFace, RBX::Decal::properties);
 
-void bindDecal(RBX::PVInstance* p, RBX::Decal* d)
+void bindDecal(int glid, int sfactor, int dfactor)
 {
-    glPushMatrix();
-
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
 
-    glBlendFunc(d->sfactor, d->dfactor);
+    glBlendFunc(sfactor, dfactor);
     
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    glBindTexture(GL_TEXTURE_2D, d->getGLid());
+    glBindTexture(GL_TEXTURE_2D, glid);
 }
 
-void unbindDecal(RBX::Decal* d)
+void unbindDecal(int sfactor)
 {
-    glBlendFunc(d->sfactor, GL_ZERO);
+    glBlendFunc(sfactor, GL_ZERO);
     glBindTexture(GL_TEXTURE_2D, 0);
 
     glDisable(GL_BLEND);
     glDisable(GL_TEXTURE_2D);
 
-    glPopMatrix();
 }
 
 void RBX::Decal::setTextureContent(Content c)
@@ -44,21 +41,27 @@ void RBX::Decal::setTextureContent(Content c)
 
 void RBX::Decal::fromFile(std::string file, Texture::WrapMode wrap, Texture::InterpolateMode interpolate)
 {
-	if (texture.isNull())
-		texture = Texture::fromFile(file, TextureFormat::AUTO, wrap, interpolate);
+    filePath = file;
+    wrapMode = wrap;
+    interpolateMode = interpolate;
 }
 
-void RBX::Decal::render(RBX::PVInstance* p)
+void RBX::Decal::render(RenderDevice* rd, RBX::PVInstance* p)
 {
 
-    if (!decalColor)
-        decalColor = p->getColor();
+    if (texture.isNull())
+    {
+        texture = Texture::fromFile(filePath, TextureFormat::AUTO, wrapMode, interpolateMode);
+    }
 
-    bindDecal(p, this);
+    Render::rawDecal(rd, p, face, getGLid(), sfactor, dfactor);
 
-    glColor(decalColor);
-    p->renderFace(face, 1, !isDefinedSurfaceDecal);
+}
 
-    unbindDecal(this);
+void RBX::Render::rawDecal(RenderDevice* d, RBX::PVInstance* pv, NormalId face, int texture, int sfactor, int dfactor)
+{
 
+    bindDecal(texture, sfactor, dfactor);
+    pv->renderFace(d, face);
+    unbindDecal(sfactor);
 }
